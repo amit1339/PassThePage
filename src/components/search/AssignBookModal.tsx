@@ -114,21 +114,21 @@ export default function AssignBookModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6">
       <div
         className="fixed inset-0 bg-[#1C1917]/40 backdrop-blur-xs transition-opacity"
         onClick={onClose}
       />
 
-      <div className="relative w-full max-w-lg bg-white border border-[#E7E5E4] rounded-lg shadow-card-hover overflow-hidden z-10">
+      <div className="relative w-full max-w-lg bg-white border border-[#E7E5E4] rounded-lg shadow-card-hover overflow-hidden z-10 max-h-[92vh] flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-[#E7E5E4] bg-[#FAF8F5]">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-md bg-white border border-[#E7E5E4] flex items-center justify-center text-[#1C1917]">
+        <div className="flex items-center justify-between px-4 sm:px-6 py-3.5 sm:py-4 border-b border-[#E7E5E4] bg-[#FAF8F5] shrink-0">
+          <div className="flex items-center gap-2.5 sm:gap-3">
+            <div className="w-8 h-8 rounded-md bg-white border border-[#E7E5E4] flex items-center justify-center text-[#1C1917] shrink-0">
               <BookOpen className="w-4 h-4 stroke-[1.5]" />
             </div>
             <div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
                 <h3 className="text-sm font-semibold text-[#1C1917] tracking-[-0.01em]">
                   {t.issueRentalTitle}
                 </h3>
@@ -145,14 +145,14 @@ export default function AssignBookModal({
           </div>
           <button
             onClick={onClose}
-            className="p-1 rounded text-[#78716C] hover:text-[#1C1917] hover:bg-[#F3EFEA] transition-colors cursor-pointer"
+            className="p-1.5 rounded text-[#78716C] hover:text-[#1C1917] hover:bg-[#F3EFEA] transition-colors cursor-pointer shrink-0"
           >
             <X className="w-4 h-4 stroke-[1.5]" />
           </button>
         </div>
 
         {/* Body */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+        <form onSubmit={handleSubmit} className="p-4 sm:p-6 space-y-4 overflow-y-auto">
           {error && (
             <div className="p-3 bg-[#FEF2F2] border border-[#FECACA] text-[#991B1B] text-xs rounded-md flex items-start gap-2">
               <ShieldAlert className="w-4 h-4 text-[#991B1B] stroke-[1.5] shrink-0 mt-0.5" />
@@ -183,7 +183,7 @@ export default function AssignBookModal({
               value={bookSearch}
               onChange={(e) => setBookSearch(e.target.value)}
               placeholder={t.searchBookPlaceholder}
-              className="w-full h-10 px-3.5 bg-white border border-[#E7E5E4] rounded-md text-sm text-[#1C1917] placeholder:text-[#78716C]/70 shadow-xs focus:outline-none focus:border-[#B45309] focus:ring-2 focus:ring-[#B45309]/15 transition-all mb-2"
+              className="w-full h-10 px-3.5 bg-white border border-[#E7E5E4] rounded-md text-base sm:text-sm text-[#1C1917] placeholder:text-[#78716C]/70 shadow-xs focus:outline-none focus:border-[#B45309] focus:ring-2 focus:ring-[#B45309]/15 transition-all mb-2"
             />
 
             <div className="max-h-48 overflow-y-auto border border-[#E7E5E4] rounded-md divide-y divide-[#E7E5E4] bg-white">
@@ -261,7 +261,7 @@ export default function AssignBookModal({
                 value={copyBarcode}
                 onChange={(e) => setCopyBarcode(e.target.value)}
                 placeholder="e.g. BIO-042, CALC-109"
-                className="w-full h-10 ps-9 pe-3.5 bg-white border border-[#E7E5E4] rounded-md text-sm font-mono uppercase text-[#1C1917] placeholder:text-[#78716C]/70 shadow-xs focus:outline-none focus:border-[#B45309] focus:ring-2 focus:ring-[#B45309]/15 transition-all"
+                className="w-full h-10 ps-9 pe-3.5 bg-white border border-[#E7E5E4] rounded-md text-base sm:text-sm font-mono uppercase text-[#1C1917] placeholder:text-[#78716C]/70 shadow-xs focus:outline-none focus:border-[#B45309] focus:ring-2 focus:ring-[#B45309]/15 transition-all"
               />
             </div>
           </div>
@@ -271,14 +271,14 @@ export default function AssignBookModal({
               type="button"
               onClick={onClose}
               disabled={isSubmitting}
-              className="px-3 py-1.5 text-xs font-medium text-[#78716C] hover:text-[#1C1917] bg-white hover:bg-[#F3EFEA] border border-[#E7E5E4] rounded-md transition-colors cursor-pointer shadow-card"
+              className="px-3.5 py-2 sm:py-1.5 text-xs font-medium text-[#78716C] hover:text-[#1C1917] bg-white hover:bg-[#F3EFEA] border border-[#E7E5E4] rounded-md transition-colors cursor-pointer shadow-card min-h-[38px] sm:min-h-0"
             >
               {t.cancelButton}
             </button>
             <button
               type="submit"
               disabled={!selectedBookId || !copyBarcode.trim() || isSubmitting || (selectedItem && !selectedItem.eligible)}
-              className="flex items-center justify-center gap-1.5 px-3.5 py-1.5 text-xs font-medium text-[#FAF8F5] bg-[#1C1917] hover:bg-[#292524] rounded-md transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed shadow-card"
+              className="flex items-center justify-center gap-1.5 px-4 py-2 sm:py-1.5 text-xs font-medium text-[#FAF8F5] bg-[#1C1917] hover:bg-[#292524] rounded-md transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed shadow-card min-h-[38px] sm:min-h-0"
             >
               <Plus className="w-3.5 h-3.5 stroke-[1.5]" />
               <span>{isSubmitting ? t.issuingButton : t.completeIssuanceButton}</span>

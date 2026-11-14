@@ -106,7 +106,7 @@ export default function StudentSearchView() {
               if (!selectedStudent && searchQuery) setShowDropdown(true);
             }}
             placeholder={t.searchStudentPlaceholder}
-            className="w-full py-3.5 ps-11 pe-24 bg-white border border-[#E7E5E4] rounded-lg text-sm text-[#1C1917] placeholder:text-[#78716C]/70 shadow-card focus:outline-none focus:border-[#B45309] focus:ring-2 focus:ring-[#B45309]/15 transition-all duration-150"
+            className="w-full py-3 sm:py-3.5 ps-10 sm:ps-11 pe-10 sm:pe-24 bg-white border border-[#E7E5E4] rounded-lg text-base sm:text-sm text-[#1C1917] placeholder:text-[#78716C]/70 shadow-card focus:outline-none focus:border-[#B45309] focus:ring-2 focus:ring-[#B45309]/15 transition-all duration-150"
           />
 
           <div className="absolute end-3.5 top-1/2 -translate-y-1/2 flex items-center gap-1.5">
@@ -171,10 +171,10 @@ export default function StudentSearchView() {
 
       {/* Selected Student Dossier Card */}
       {selectedStudent && (
-        <div className="bg-white border border-[#E7E5E4] rounded-lg p-6 shadow-card">
-          <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-5">
-            <div className="flex items-start gap-4">
-              <div className="w-12 h-12 rounded-md bg-[#FAF8F5] border border-[#E7E5E4] text-[#1C1917] flex items-center justify-center text-sm font-mono font-medium shrink-0">
+        <div className="bg-white border border-[#E7E5E4] rounded-lg p-4 sm:p-6 shadow-card">
+          <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 sm:gap-5">
+            <div className="flex items-start gap-3 sm:gap-4">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-md bg-[#FAF8F5] border border-[#E7E5E4] text-[#1C1917] flex items-center justify-center text-xs sm:text-sm font-mono font-medium shrink-0">
                 {selectedStudent.fullName
                   .split(' ')
                   .map((n) => n[0])
@@ -183,7 +183,7 @@ export default function StudentSearchView() {
               </div>
 
               <div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
                   <span className="text-[11px] font-mono font-medium px-2 py-0.5 rounded-md bg-[#FAF8F5] text-[#1C1917] border border-[#E7E5E4]">
                     {t.studentDossier}
                   </span>
@@ -192,7 +192,7 @@ export default function StudentSearchView() {
                   </span>
                 </div>
 
-                <h2 className="font-editorial text-[22px] sm:text-[24px] font-semibold text-[#1C1917] tracking-[-0.02em] leading-snug mt-1.5">
+                <h2 className="font-editorial text-[20px] sm:text-[24px] font-semibold text-[#1C1917] tracking-[-0.02em] leading-snug mt-1.5">
                   {selectedStudent.fullName}
                 </h2>
 
@@ -208,19 +208,22 @@ export default function StudentSearchView() {
             </div>
 
             {/* Issued stats & issue action button */}
-            <div className="flex sm:flex-col items-center sm:items-end justify-between border-t sm:border-t-0 pt-4 sm:pt-0 border-[#E7E5E4] shrink-0">
-              <div className="text-start sm:text-end">
-                <div className="text-2xl font-mono font-semibold text-[#B45309] leading-none">
+            <div className="flex flex-col sm:items-end justify-between border-t sm:border-t-0 pt-3.5 sm:pt-0 border-[#E7E5E4] shrink-0 gap-3">
+              <div className="flex items-center sm:block justify-between text-start sm:text-end">
+                <p className="text-[11px] text-[#78716C] uppercase tracking-[0.06em] font-mono sm:hidden">
+                  {t.activeRentalsHeld}:
+                </p>
+                <div className="text-xl sm:text-2xl font-mono font-semibold text-[#B45309] leading-none">
                   {rentals.length}
                 </div>
-                <p className="text-[11px] text-[#78716C] uppercase tracking-[0.06em] mt-1 font-mono">
+                <p className="text-[11px] text-[#78716C] uppercase tracking-[0.06em] mt-1 font-mono hidden sm:block">
                   {t.activeRentalsHeld}
                 </p>
               </div>
 
               <button
                 onClick={() => setShowAssignModal(true)}
-                className="mt-3 flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-[#FAF8F5] bg-[#1C1917] hover:bg-[#292524] border border-[#1C1917] rounded-md transition-all duration-150 cursor-pointer shadow-card"
+                className="w-full sm:w-auto flex items-center justify-center gap-1.5 px-3 py-2 sm:py-1.5 text-xs font-medium text-[#FAF8F5] bg-[#1C1917] hover:bg-[#292524] border border-[#1C1917] rounded-md transition-all duration-150 cursor-pointer shadow-card min-h-[38px] sm:min-h-0"
               >
                 <Plus className="w-3.5 h-3.5 stroke-[1.5]" />
                 <span>{t.issueTextbookButton}</span>
@@ -291,11 +294,11 @@ export default function StudentSearchView() {
                 </div>
               </div>
 
-              <div className="flex items-center justify-end shrink-0">
+              <div className="flex items-center justify-end shrink-0 w-full sm:w-auto">
                 <button
                   onClick={() => handleReturn(r.id)}
                   disabled={returningId === r.id}
-                  className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium text-[#065F46] bg-[#ECFDF5] hover:bg-[#A7F3D0]/60 border border-[#A7F3D0] rounded-md transition-colors cursor-pointer disabled:opacity-50"
+                  className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-3 py-2 sm:py-1 text-xs font-medium text-[#065F46] bg-[#ECFDF5] hover:bg-[#A7F3D0]/60 border border-[#A7F3D0] rounded-md transition-colors cursor-pointer disabled:opacity-50 min-h-[36px] sm:min-h-0"
                 >
                   <CheckCircle2 className="w-3.5 h-3.5 stroke-[1.5]" />
                   <span>{returningId === r.id ? t.returningBook : t.returnBook}</span>
@@ -320,8 +323,8 @@ export default function StudentSearchView() {
 
       {/* ACTIONABLE LAUNCHPAD: Instead of a giant blank box, display Quick-Access Student Records */}
       {!selectedStudent && !searchQuery && (
-        <div className="bg-white border border-[#E7E5E4] rounded-lg p-6 shadow-card">
-          <div className="flex items-center justify-between pb-4 mb-4 border-b border-[#E7E5E4]">
+        <div className="bg-white border border-[#E7E5E4] rounded-lg p-4 sm:p-6 shadow-card">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 sm:gap-4 pb-3.5 sm:pb-4 mb-3.5 sm:mb-4 border-b border-[#E7E5E4]">
             <div>
               <h3 className="font-semibold text-sm text-[#1C1917] tracking-tight">
                 {t.quickAccessStudents}
@@ -330,13 +333,13 @@ export default function StudentSearchView() {
                 {t.quickAccessStudentsSub}
               </p>
             </div>
-            <span className="text-xs font-mono text-[#78716C] bg-[#FAF8F5] px-2 py-0.5 rounded border border-[#E7E5E4]">
+            <span className="self-start sm:self-auto text-xs font-mono text-[#78716C] bg-[#FAF8F5] px-2 py-0.5 rounded border border-[#E7E5E4]">
               {t.studentsEnrolledCount(students.length)}
             </span>
           </div>
 
           {/* Cards Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-3.5">
             {students.slice(0, 6).map((student) => {
               const initials = student.fullName
                 .split(' ')
@@ -348,7 +351,7 @@ export default function StudentSearchView() {
                 <button
                   key={student.id}
                   onClick={() => handleSelectStudent(student)}
-                  className="group relative flex flex-col justify-between p-4 bg-[#FAF8F5] hover:bg-[#F3EFEA] border border-[#E7E5E4] hover:border-[#D6D3D1] rounded-lg text-start transition-all duration-150 cursor-pointer shadow-xs hover:shadow-card"
+                  className="group relative flex flex-col justify-between p-3.5 sm:p-4 bg-[#FAF8F5] hover:bg-[#F3EFEA] border border-[#E7E5E4] hover:border-[#D6D3D1] rounded-lg text-start transition-all duration-150 cursor-pointer shadow-xs hover:shadow-card active:scale-[0.99]"
                 >
                   <div className="flex items-start gap-3">
                     <div className="w-8 h-8 rounded-md bg-white border border-[#E7E5E4] text-[#1C1917] flex items-center justify-center text-xs font-mono font-medium shrink-0 shadow-xs">
@@ -382,8 +385,8 @@ export default function StudentSearchView() {
             })}
           </div>
 
-          {/* Compact Keyboard Shortcut Hint Bar */}
-          <div className="mt-5 pt-4 border-t border-[#E7E5E4] flex items-center justify-center gap-4 text-xs font-mono text-[#78716C] flex-wrap">
+          {/* Desktop Keyboard Shortcut Hint Bar (Hidden on Mobile) */}
+          <div className="hidden sm:flex mt-5 pt-4 border-t border-[#E7E5E4] items-center justify-center gap-4 text-xs font-mono text-[#78716C] flex-wrap">
             <span className="inline-flex items-center gap-1">
               <kbd className="px-1.5 py-0.5 bg-[#FAF8F5] border border-[#E7E5E4] rounded text-[10px]">⌘K</kbd> {t.toSearch}
             </span>

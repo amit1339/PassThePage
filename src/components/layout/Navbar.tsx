@@ -41,20 +41,20 @@ export default function Navbar({ onOpenAddBook, onOpenAddStudent, stats }: Navba
   };
 
   return (
-    <header className="sticky top-0 z-40 bg-[#FAF8F5]/80 backdrop-blur-md border-b border-[#E7E5E4]">
-      <div className="max-w-[1120px] mx-auto px-4 sm:px-6">
-        <div className="flex items-center justify-between h-16 gap-3">
+    <header className="sticky top-0 z-40 bg-[#FAF8F5]/90 backdrop-blur-md border-b border-[#E7E5E4]">
+      <div className="max-w-[1120px] mx-auto px-3 sm:px-6">
+        <div className="flex items-center justify-between h-14 sm:h-16 gap-2 sm:gap-3">
           {/* Logo */}
           <div className="flex items-center shrink-0">
             <img
               src={logoIcon}
               alt="PassThePage"
-              className="h-11 sm:h-12 w-auto object-contain mix-blend-multiply select-none"
+              className="h-8 sm:h-11 md:h-12 w-auto object-contain mix-blend-multiply select-none"
             />
           </div>
 
-          {/* Center: Refined Metrics Pill */}
-          <div className="flex items-center">
+          {/* Desktop Center: Refined Metrics Pill */}
+          <div className="hidden md:flex items-center">
             <div className="flex items-center gap-2 sm:gap-3 px-3 py-1.5 bg-white border border-[#E7E5E4] rounded-md text-xs font-mono shadow-[0_1px_3px_rgba(28,25,23,0.04)]">
               {/* Titles Metric */}
               <div className="flex items-center gap-1.5">
@@ -83,17 +83,18 @@ export default function Navbar({ onOpenAddBook, onOpenAddStudent, stats }: Navba
           </div>
 
           {/* Quick Actions & Language Toggle */}
-          <div className="flex items-center gap-2 shrink-0">
+          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
             {/* Language Switcher Button */}
             <button
               onClick={toggleLang}
               title={lang === 'en' ? 'החלף לעברית' : 'Switch to English'}
-              className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-[#1C1917] hover:bg-[#F3EFEA] bg-white border border-[#E7E5E4] rounded-md transition-all duration-150 cursor-pointer shadow-[0_1px_3px_rgba(28,25,23,0.04)]"
+              className="inline-flex items-center justify-center gap-1 px-2 sm:px-2.5 py-1.5 text-xs font-medium text-[#1C1917] hover:bg-[#F3EFEA] bg-white border border-[#E7E5E4] rounded-md transition-all duration-150 cursor-pointer shadow-[0_1px_3px_rgba(28,25,23,0.04)] min-h-[34px] sm:min-h-0"
             >
               <Languages className="w-3.5 h-3.5 stroke-[1.5] text-[#78716C]" />
-              <span className="font-sans font-semibold">{t.languageButton}</span>
+              <span className="font-sans font-semibold text-[11px] sm:text-xs">{t.languageButton}</span>
             </button>
 
+            {/* Seed DB (Desktop only) */}
             <button
               onClick={handleSeedDatabase}
               disabled={seeding}
@@ -113,21 +114,54 @@ export default function Navbar({ onOpenAddBook, onOpenAddStudent, stats }: Navba
               )}
             </button>
 
+            {/* Enroll Student Button */}
             <button
               onClick={onOpenAddStudent}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-[#1C1917] bg-white hover:bg-[#F3EFEA] border border-[#E7E5E4] rounded-md transition-all duration-150 cursor-pointer shadow-[0_1px_3px_rgba(28,25,23,0.04)]"
+              title={t.enrollStudentButton}
+              className="flex items-center justify-center gap-1.5 px-2.5 sm:px-3 py-1.5 text-xs font-medium text-[#1C1917] bg-white hover:bg-[#F3EFEA] border border-[#E7E5E4] rounded-md transition-all duration-150 cursor-pointer shadow-[0_1px_3px_rgba(28,25,23,0.04)] min-h-[34px] sm:min-h-0"
             >
               <UserPlus className="w-3.5 h-3.5 text-[#78716C] stroke-[1.5]" />
-              <span>{t.enrollStudentButton}</span>
+              <span className="hidden sm:inline">{t.enrollStudentButton}</span>
             </button>
 
+            {/* Add Book Button */}
             <button
               onClick={onOpenAddBook}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-[#FAF8F5] bg-[#1C1917] hover:bg-[#292524] border border-[#1C1917] rounded-md transition-all duration-150 cursor-pointer shadow-[0_1px_3px_rgba(28,25,23,0.06)]"
+              title={t.addBookButton}
+              className="flex items-center justify-center gap-1.5 px-2.5 sm:px-3 py-1.5 text-xs font-medium text-[#FAF8F5] bg-[#1C1917] hover:bg-[#292524] border border-[#1C1917] rounded-md transition-all duration-150 cursor-pointer shadow-[0_1px_3px_rgba(28,25,23,0.06)] min-h-[34px] sm:min-h-0"
             >
               <BookPlus className="w-3.5 h-3.5 stroke-[1.5]" />
-              <span>{t.addBookButton}</span>
+              <span className="hidden sm:inline">{t.addBookButton}</span>
             </button>
+          </div>
+        </div>
+
+        {/* Mobile Metrics Sub-Bar */}
+        <div className="md:hidden py-1.5 border-t border-[#E7E5E4]/60 flex items-center justify-center">
+          <div className="flex items-center gap-2 px-2.5 py-1 bg-white border border-[#E7E5E4] rounded-md text-[11px] font-mono shadow-xs">
+            {/* Titles */}
+            <div className="flex items-center gap-1">
+              <span className="font-semibold text-[#1C1917]">{stats.booksCount}</span>
+              <span className="bg-[#FEF3C7] text-[#92400E] border border-[#FDE68A] px-1 py-0.2 rounded text-[10px] font-medium">
+                {t.titlesMetric(stats.booksCount)}
+              </span>
+            </div>
+
+            <div className="h-2.5 w-px bg-[#E7E5E4]" />
+
+            {/* Students */}
+            <div className="flex items-center gap-1">
+              <span className="font-semibold text-[#1C1917]">{stats.studentsCount}</span>
+              <span className="text-[#78716C]">{t.studentsMetric(stats.studentsCount)}</span>
+            </div>
+
+            <div className="h-2.5 w-px bg-[#E7E5E4]" />
+
+            {/* Issued */}
+            <div className="flex items-center gap-1">
+              <span className="font-semibold text-[#B45309]">{stats.activeRentalsCount}</span>
+              <span className="text-[#78716C]">{t.issuedMetric(stats.activeRentalsCount)}</span>
+            </div>
           </div>
         </div>
       </div>

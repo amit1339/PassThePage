@@ -78,17 +78,17 @@ export default function AddBookModal({ isOpen, onClose, onBookAdded }: AddBookMo
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6">
       <div
         className="fixed inset-0 bg-[#1C1917]/40 backdrop-blur-xs transition-opacity"
         onClick={onClose}
       />
 
-      <div className="relative w-full max-w-lg bg-white border border-[#E7E5E4] rounded-lg shadow-card-hover overflow-hidden z-10">
+      <div className="relative w-full max-w-lg bg-white border border-[#E7E5E4] rounded-lg shadow-card-hover overflow-hidden z-10 max-h-[92vh] flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-[#E7E5E4] bg-[#FAF8F5]">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-md bg-white border border-[#E7E5E4] flex items-center justify-center text-[#1C1917]">
+        <div className="flex items-center justify-between px-4 sm:px-6 py-3.5 sm:py-4 border-b border-[#E7E5E4] bg-[#FAF8F5] shrink-0">
+          <div className="flex items-center gap-2.5 sm:gap-3">
+            <div className="w-8 h-8 rounded-md bg-white border border-[#E7E5E4] flex items-center justify-center text-[#1C1917] shrink-0">
               <BookPlus className="w-4 h-4 stroke-[1.5]" />
             </div>
             <div>
@@ -102,14 +102,14 @@ export default function AddBookModal({ isOpen, onClose, onBookAdded }: AddBookMo
           </div>
           <button
             onClick={onClose}
-            className="p-1 rounded text-[#78716C] hover:text-[#1C1917] hover:bg-[#F3EFEA] transition-colors cursor-pointer"
+            className="p-1.5 rounded text-[#78716C] hover:text-[#1C1917] hover:bg-[#F3EFEA] transition-colors cursor-pointer shrink-0"
           >
             <X className="w-4 h-4 stroke-[1.5]" />
           </button>
         </div>
 
         {/* Form Body */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+        <form onSubmit={handleSubmit} className="p-4 sm:p-6 space-y-4 overflow-y-auto">
           {error && (
             <div className="p-3 bg-[#FEF2F2] border border-[#FECACA] text-[#991B1B] text-xs rounded-md">
               {error}
@@ -126,7 +126,7 @@ export default function AddBookModal({ isOpen, onClose, onBookAdded }: AddBookMo
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="e.g. Campbell Biology 12th Edition"
-              className="w-full h-10 px-3.5 bg-white border border-[#E7E5E4] rounded-md text-sm text-[#1C1917] placeholder:text-[#78716C]/70 shadow-xs focus:outline-none focus:border-[#B45309] focus:ring-2 focus:ring-[#B45309]/15 transition-all"
+              className="w-full h-10 px-3.5 bg-white border border-[#E7E5E4] rounded-md text-base sm:text-sm text-[#1C1917] placeholder:text-[#78716C]/70 shadow-xs focus:outline-none focus:border-[#B45309] focus:ring-2 focus:ring-[#B45309]/15 transition-all"
             />
           </div>
 
@@ -140,7 +140,7 @@ export default function AddBookModal({ isOpen, onClose, onBookAdded }: AddBookMo
               value={isbn}
               onChange={(e) => setIsbn(e.target.value)}
               placeholder="978-0-13-518838-0"
-              className="w-full h-10 px-3.5 bg-white border border-[#E7E5E4] rounded-md text-sm font-mono text-[#1C1917] placeholder:text-[#78716C]/70 shadow-xs focus:outline-none focus:border-[#B45309] focus:ring-2 focus:ring-[#B45309]/15 transition-all uppercase"
+              className="w-full h-10 px-3.5 bg-white border border-[#E7E5E4] rounded-md text-base sm:text-sm font-mono text-[#1C1917] placeholder:text-[#78716C]/70 shadow-xs focus:outline-none focus:border-[#B45309] focus:ring-2 focus:ring-[#B45309]/15 transition-all uppercase"
             />
           </div>
 
@@ -152,7 +152,7 @@ export default function AddBookModal({ isOpen, onClose, onBookAdded }: AddBookMo
               <select
                 value={subject}
                 onChange={(e) => setSubject(e.target.value)}
-                className="w-full h-10 px-3 bg-white border border-[#E7E5E4] rounded-md text-sm text-[#1C1917] shadow-xs focus:outline-none focus:border-[#B45309] focus:ring-2 focus:ring-[#B45309]/15 transition-all"
+                className="w-full h-10 px-3 bg-white border border-[#E7E5E4] rounded-md text-base sm:text-sm text-[#1C1917] shadow-xs focus:outline-none focus:border-[#B45309] focus:ring-2 focus:ring-[#B45309]/15 transition-all"
               >
                 {SUBJECT_OPTIONS.map((sub) => (
                   <option key={sub} value={sub}>
@@ -170,7 +170,7 @@ export default function AddBookModal({ isOpen, onClose, onBookAdded }: AddBookMo
                 value={gradeLevel}
                 onChange={(e) => setGradeLevel(e.target.value)}
                 placeholder="e.g. 10th Grade"
-                className="w-full h-10 px-3 bg-white border border-[#E7E5E4] rounded-md text-sm text-[#1C1917] shadow-xs focus:outline-none focus:border-[#B45309] focus:ring-2 focus:ring-[#B45309]/15 transition-all"
+                className="w-full h-10 px-3 bg-white border border-[#E7E5E4] rounded-md text-base sm:text-sm text-[#1C1917] shadow-xs focus:outline-none focus:border-[#B45309] focus:ring-2 focus:ring-[#B45309]/15 transition-all"
               />
             </div>
             <div>
@@ -182,7 +182,7 @@ export default function AddBookModal({ isOpen, onClose, onBookAdded }: AddBookMo
                 min={1}
                 value={totalCopies}
                 onChange={(e) => setTotalCopies(Math.max(1, parseInt(e.target.value) || 1))}
-                className="w-full h-10 px-3 bg-white border border-[#E7E5E4] rounded-md text-sm font-mono text-[#1C1917] shadow-xs focus:outline-none focus:border-[#B45309] focus:ring-2 focus:ring-[#B45309]/15 transition-all"
+                className="w-full h-10 px-3 bg-white border border-[#E7E5E4] rounded-md text-base sm:text-sm font-mono text-[#1C1917] shadow-xs focus:outline-none focus:border-[#B45309] focus:ring-2 focus:ring-[#B45309]/15 transition-all"
               />
             </div>
           </div>
@@ -192,14 +192,14 @@ export default function AddBookModal({ isOpen, onClose, onBookAdded }: AddBookMo
               type="button"
               onClick={onClose}
               disabled={isSubmitting}
-              className="px-3 py-1.5 text-xs font-medium text-[#78716C] hover:text-[#1C1917] bg-white hover:bg-[#F3EFEA] border border-[#E7E5E4] rounded-md transition-colors cursor-pointer shadow-card"
+              className="px-3.5 py-2 sm:py-1.5 text-xs font-medium text-[#78716C] hover:text-[#1C1917] bg-white hover:bg-[#F3EFEA] border border-[#E7E5E4] rounded-md transition-colors cursor-pointer shadow-card min-h-[38px] sm:min-h-0"
             >
               {t.cancelButton}
             </button>
             <button
               type="submit"
               disabled={isSubmitting}
-              className="flex items-center justify-center gap-1.5 px-3.5 py-1.5 text-xs font-medium text-[#FAF8F5] bg-[#1C1917] hover:bg-[#292524] rounded-md transition-colors cursor-pointer disabled:opacity-60 shadow-card"
+              className="flex items-center justify-center gap-1.5 px-4 py-2 sm:py-1.5 text-xs font-medium text-[#FAF8F5] bg-[#1C1917] hover:bg-[#292524] rounded-md transition-colors cursor-pointer disabled:opacity-60 shadow-card min-h-[38px] sm:min-h-0"
             >
               {isSubmitting ? (
                 <>

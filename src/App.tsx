@@ -103,11 +103,11 @@ export default function App() {
         stats={stats}
       />
 
-      <main className="flex-1 max-w-[1120px] w-full mx-auto px-4 sm:px-6 py-8">
+      <main className="flex-1 max-w-[1120px] w-full mx-auto px-3.5 sm:px-6 py-4 sm:py-8">
         {/* Firestore Security Rules Alert Banner */}
         {permissionError && (
-          <div className="mb-6 p-4 rounded-lg bg-[#FEF3C7] border border-[#FDE68A] text-[#1C1917] shadow-card">
-            <div className="flex items-start gap-3">
+          <div className="mb-4 sm:mb-6 p-3 sm:p-4 rounded-lg bg-[#FEF3C7] border border-[#FDE68A] text-[#1C1917] shadow-card">
+            <div className="flex items-start gap-2.5 sm:gap-3">
               <div className="p-1.5 rounded-md bg-[#FDE68A]/60 text-[#B45309] shrink-0 mt-0.5">
                 <ShieldAlert className="w-4 h-4 stroke-[1.5]" />
               </div>
@@ -118,7 +118,7 @@ export default function App() {
                 <p className="text-[#78716C] leading-relaxed">
                   {t.securityRulesNotice}
                 </p>
-                <div className="bg-white p-3 rounded-md border border-[#E7E5E4] font-mono text-xs text-[#1C1917] select-all shadow-card">
+                <div className="bg-white p-3 rounded-md border border-[#E7E5E4] font-mono text-xs text-[#1C1917] select-all shadow-card overflow-x-auto">
                   <p className="font-sans font-medium mb-1 text-[11px] text-[#78716C] uppercase tracking-[0.06em]">
                     {t.quickFixRules}
                   </p>
@@ -131,7 +131,7 @@ export default function App() {
 
         {/* Empty Database Notice */}
         {!permissionError && isFirebaseConfigured && stats.booksCount === 0 && (
-          <div className="mb-6 p-4 rounded-lg bg-white border border-[#E7E5E4] flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-card">
+          <div className="mb-4 sm:mb-6 p-3.5 sm:p-4 rounded-lg bg-white border border-[#E7E5E4] flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-card">
             <div>
               <p className="font-semibold text-sm text-[#1C1917]">
                 {t.databaseEmptyTitle}
@@ -144,9 +144,9 @@ export default function App() {
         )}
 
         {/* Operational Header with Editorial Serif Title */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 pb-4 border-b border-[#E7E5E4]">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 mb-4 sm:mb-6 pb-3.5 sm:pb-4 border-b border-[#E7E5E4]">
           <div>
-            <h1 className="font-editorial text-[26px] sm:text-[28px] font-semibold text-[#1C1917] tracking-[-0.02em] leading-tight">
+            <h1 className="font-editorial text-[22px] sm:text-[28px] font-semibold text-[#1C1917] tracking-[-0.02em] leading-tight">
               {t.circLedgerTitle}
             </h1>
             <p className="text-xs sm:text-sm text-[#78716C] mt-1 font-sans">
@@ -154,7 +154,7 @@ export default function App() {
             </p>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="w-full sm:w-auto">
             <ModeSwitcher mode={mode} onModeChange={setMode} />
           </div>
         </div>
