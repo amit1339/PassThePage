@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { UserPlus, BookPlus, Database, Check, Languages } from 'lucide-react';
 import { populateFirestoreWithSeedData } from '../../lib/dbSeeder';
 import { useLanguage } from '../../context/LanguageContext';
+import logoIcon from '../../assets/icon.jpg';
 
 interface NavbarProps {
   onOpenAddBook: () => void;
@@ -46,7 +47,7 @@ export default function Navbar({ onOpenAddBook, onOpenAddStudent, stats }: Navba
           {/* Logo */}
           <div className="flex items-center shrink-0">
             <img
-              src="/icon.jpg"
+              src={logoIcon}
               alt="PassThePage"
               className="h-11 sm:h-12 w-auto object-contain mix-blend-multiply select-none"
             />
