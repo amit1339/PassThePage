@@ -185,7 +185,7 @@ export function useStudentRentals(searchQuery: string) {
       const newRental: Omit<Rental, 'id'> = {
         bookId: book.id,
         bookTitle: book.title,
-        bookIsbn: book.isbn,
+        bookIsbn: book.isbn || '',
         copyBarcode,
         studentDocId: selectedStudent.id,
         studentSchoolId: selectedStudent.studentId,

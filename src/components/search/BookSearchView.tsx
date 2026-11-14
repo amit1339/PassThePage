@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
-import { Search, BookOpen, X, Filter, Edit3, ArrowRight, ArrowLeft, CornerDownLeft } from 'lucide-react';
+import { Search, BookOpen, X, Filter, Edit3, Trash2, ArrowRight, ArrowLeft, CornerDownLeft } from 'lucide-react';
 import { useBookRentals } from '../../hooks/useBookRentals';
 import ClassGroupAccordion from './ClassGroupAccordion';
 import EditBookModal from '../forms/EditBookModal';
@@ -26,7 +26,7 @@ export default function BookSearchView() {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
-  const { t, isRtl } = useLanguage();
+  const { t, isRtl, lang } = useLanguage();
 
   const {
     books,
@@ -37,7 +37,31 @@ export default function BookSearchView() {
     rentals,
     loading,
     markReturned,
+    deleteBook,
   } = useBookRentals(debouncedQuery);
+
+  const handleDeleteBook = async (book: Book) => {
+    const hasRentals = rentals.length > 0 && selectedBook?.id === book.id;
+    const confirmMsg = hasRentals
+      ? (lang === 'he'
+          ? `שים לב: ישנם ${rentals.length} עותקים מושאלים לספר "${book.title}". האם אתה בטוח שברצונך למחוק אותו מהמערכת?`
+          : `Warning: There are ${rentals.length} active borrowings for "${book.title}". Are you sure you want to delete it from the catalog?`)
+      : (lang === 'he'
+          ? `האם אתה בטוח שברצונך למחוק את הספר "${book.title}" מהמערכת?`
+          : `Are you sure you want to delete "${book.title}" from the catalog?`);
+
+    if (window.confirm(confirmMsg)) {
+      try {
+        await deleteBook(book.id);
+        if (selectedBook?.id === book.id) {
+          setSelectedBook(null);
+        }
+      } catch (err: any) {
+        console.error('Delete book error:', err);
+        alert(err?.message || (lang === 'he' ? 'שגיאה במחיקת הספר.' : 'Failed to delete book.'));
+      }
+    }
+  };
 
   // Debounce search (150ms)
   useEffect(() => {
@@ -130,9 +154,9 @@ export default function BookSearchView() {
         {showDropdown && !selectedBook && filteredBooks.length > 0 && (
           <div
             ref={dropdownRef}
-            className="absolute top-full mt-1.5 w-full bg-white border border-[#E7E5E4] rounded-lg shadow-card-hover overflow-hidden z-30 divide-y divide-[#E7E5E4]"
+            className="absolute top-full mt-1.5 w-full bg-white border border-[#E7E5E4] rounded-lg shadow-card-hover overflow-hidden z-30 divide-y divide-[#E7E5E4] max-h-80 overflow-y-auto"
           >
-            {filteredBooks.slice(0, 6).map((book) => (
+            {filteredBooks.slice(0, 100).map((book) => (
               <button
                 key={book.id}
                 onClick={() => handleSelectBook(book)}
@@ -149,8 +173,7 @@ export default function BookSearchView() {
                       {book.title}
                     </p>
                     <div className="flex items-center gap-2 mt-0.5 text-xs text-[#78716C]">
-                      <span className="font-mono text-[11px]">{book.isbn}</span>
-                      <span>·</span>
+                      {book.isbn && <span className="font-mono text-[11px]">{book.isbn} ·</span>}
                       <span className="text-[11px]">{book.gradeLevel}</span>
                     </div>
                   </div>
@@ -201,9 +224,11 @@ export default function BookSearchView() {
                 </h2>
 
                 <div className="flex items-center gap-2 mt-2 flex-wrap">
-                  <span className="text-xs font-mono text-[#1C1917] bg-[#FAF8F5] px-2 py-0.5 rounded border border-[#E7E5E4]">
-                    ISBN: {selectedBook.isbn}
-                  </span>
+                  {selectedBook.isbn && (
+                    <span className="text-xs font-mono text-[#1C1917] bg-[#FAF8F5] px-2 py-0.5 rounded border border-[#E7E5E4]">
+                      ISBN: {selectedBook.isbn}
+                    </span>
+                  )}
                   <span className="text-xs text-[#78716C] font-mono">
                     ID: {selectedBook.id}
                   </span>
@@ -213,6 +238,13 @@ export default function BookSearchView() {
                   >
                     <Edit3 className="w-3.5 h-3.5 stroke-[1.5] text-[#78716C]" />
                     <span>{t.updateDetails}</span>
+                  </button>
+                  <button
+                    onClick={() => handleDeleteBook(selectedBook)}
+                    className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium text-[#991B1B] bg-white hover:bg-[#FEF2F2] border border-[#FECACA] rounded-md transition-colors cursor-pointer shadow-card min-h-[32px] sm:min-h-0"
+                  >
+                    <Trash2 className="w-3.5 h-3.5 stroke-[1.5] text-[#991B1B]" />
+                    <span>{t.deleteBookButton}</span>
                   </button>
                 </div>
               </div>
@@ -322,8 +354,8 @@ export default function BookSearchView() {
           </div>
 
           {/* Cards Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-3.5">
-            {books.slice(0, 6).map((book) => {
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-3.5 max-h-[640px] overflow-y-auto pe-1">
+            {books.map((book) => {
               const spineColor = SUBJECT_SPINE_COLORS[book.subject] || 'bg-[#B45309]';
               return (
                 <button
@@ -349,9 +381,11 @@ export default function BookSearchView() {
                       {book.title}
                     </h4>
 
-                    <p className="text-[11px] font-mono text-[#78716C] mt-1">
-                      {book.isbn}
-                    </p>
+                    {book.isbn && (
+                      <p className="text-[11px] font-mono text-[#78716C] mt-1">
+                        {book.isbn}
+                      </p>
+                    )}
                   </div>
 
                   <div className="flex items-center justify-between pt-3 mt-3 border-t border-[#E7E5E4] text-xs">
@@ -408,6 +442,10 @@ export default function BookSearchView() {
         onClose={() => setIsEditModalOpen(false)}
         book={selectedBook}
         onBookUpdated={handleBookUpdated}
+        onDelete={(bookId) => {
+          const b = books.find((x) => x.id === bookId) || selectedBook;
+          if (b) handleDeleteBook(b);
+        }}
       />
     </div>
   );

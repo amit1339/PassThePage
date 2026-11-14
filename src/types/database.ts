@@ -4,7 +4,7 @@ export interface Book {
   id: string;
   title: string;
   author?: string; // Optional / deprecated as per user requirement
-  isbn: string;
+  isbn?: string; // Optional as per user requirement ("remove the isbn i dont need it")
   subject: string;
   gradeLevel: string;
   totalCopies: number;
@@ -25,7 +25,7 @@ export interface Rental {
   id: string;
   bookId: string;
   bookTitle: string;
-  bookIsbn: string;
+  bookIsbn?: string;
   copyBarcode: string;
   studentDocId: string;
   studentSchoolId: string;

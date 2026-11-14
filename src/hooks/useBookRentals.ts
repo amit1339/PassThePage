@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import { collection, query, where, onSnapshot, doc, updateDoc, Timestamp } from 'firebase/firestore';
+import { collection, query, where, onSnapshot, doc, updateDoc, deleteDoc, Timestamp } from 'firebase/firestore';
 import { db, isFirebaseConfigured } from '../lib/firebase';
 import { seedBooks, seedRentals } from '../lib/seedData';
 import type { Book, Rental } from '../types/database';
@@ -58,7 +58,7 @@ export function useBookRentals(searchQuery: string) {
       (b) =>
         b.title.toLowerCase().includes(q) ||
         b.subject.toLowerCase().includes(q) ||
-        b.isbn.toLowerCase().includes(q) ||
+        (b.isbn && b.isbn.toLowerCase().includes(q)) ||
         (b.author && b.author.toLowerCase().includes(q))
     );
   }, [books, searchQuery]);
@@ -123,6 +123,20 @@ export function useBookRentals(searchQuery: string) {
     });
   }, []);
 
+  // Delete a book from catalog
+  const deleteBook = useCallback(
+    async (bookId: string) => {
+      if (!isFirebaseConfigured || !db) {
+        setBooks((prev) => prev.filter((b) => b.id !== bookId));
+        if (selectedBook?.id === bookId) setSelectedBook(null);
+        return;
+      }
+      await deleteDoc(doc(db, 'books', bookId));
+      if (selectedBook?.id === bookId) setSelectedBook(null);
+    },
+    [selectedBook]
+  );
+
   return {
     books,
     filteredBooks,
@@ -132,5 +146,6 @@ export function useBookRentals(searchQuery: string) {
     groupedRentals,
     loading,
     markReturned,
+    deleteBook,
   };
 }

@@ -99,6 +99,7 @@ export interface Translations {
   editBookSub: (title: string) => string;
   saveChangesButton: string;
   updatingButton: string;
+  deleteBookButton: string;
 
   // Modals - Add Student
   enrollStudentTitle: string;
@@ -239,6 +240,7 @@ export const translations: Record<Language, Translations> = {
     editBookSub: (title) => `Edit catalog details for ${title}`,
     saveChangesButton: 'Save Changes',
     updatingButton: 'Updating...',
+    deleteBookButton: 'Delete Book',
 
     enrollStudentTitle: 'Enroll New Student',
     enrollStudentSub: 'Register student credentials for library circulation',
@@ -374,6 +376,7 @@ export const translations: Record<Language, Translations> = {
     editBookSub: (title) => `עריכת פרטי קטלוג עבור "${title}"`,
     saveChangesButton: 'שמירת שינויים',
     updatingButton: 'מעדכן...',
+    deleteBookButton: 'מחיקת ספר',
 
     enrollStudentTitle: 'רישום תלמיד חדש',
     enrollStudentSub: 'הזנת פרטי תלמיד במערכת השאלת הספרים',

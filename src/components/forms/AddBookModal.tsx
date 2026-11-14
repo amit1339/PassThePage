@@ -26,7 +26,6 @@ const SUBJECT_OPTIONS = [
 export default function AddBookModal({ isOpen, onClose, onBookAdded }: AddBookModalProps) {
   const { t, lang } = useLanguage();
   const [title, setTitle] = useState('');
-  const [isbn, setIsbn] = useState('');
   const [subject, setSubject] = useState('Science');
   const [gradeLevel, setGradeLevel] = useState(() => (lang === 'he' ? 'שכבה ח' : '8th Grade'));
   const [totalCopies, setTotalCopies] = useState<number>(30);
@@ -37,8 +36,8 @@ export default function AddBookModal({ isOpen, onClose, onBookAdded }: AddBookMo
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!title.trim() || !isbn.trim()) {
-      setError(lang === 'he' ? 'נא להזין שם ספר ומסת״ב (ISBN).' : 'Please provide a Book Title and ISBN.');
+    if (!title.trim()) {
+      setError(lang === 'he' ? 'נא להזין שם ספר.' : 'Please provide a Book Title.');
       return;
     }
 
@@ -48,7 +47,7 @@ export default function AddBookModal({ isOpen, onClose, onBookAdded }: AddBookMo
     const copiesCount = Math.max(1, Number(totalCopies) || 1);
     const newBook: Omit<Book, 'id'> = {
       title: title.trim(),
-      isbn: isbn.trim().toUpperCase(),
+      isbn: '',
       subject,
       gradeLevel: gradeLevel.trim() || 'General',
       totalCopies: copiesCount,
@@ -66,7 +65,6 @@ export default function AddBookModal({ isOpen, onClose, onBookAdded }: AddBookMo
       }
 
       setTitle('');
-      setIsbn('');
       setTotalCopies(30);
       onClose();
     } catch (err: any) {
@@ -127,20 +125,6 @@ export default function AddBookModal({ isOpen, onClose, onBookAdded }: AddBookMo
               onChange={(e) => setTitle(e.target.value)}
               placeholder={lang === 'he' ? 'למשל: פיזיקה לכיתה ח' : 'e.g. Campbell Biology 12th Edition'}
               className="w-full h-10 px-3.5 bg-white border border-[#E7E5E4] rounded-md text-base sm:text-sm text-[#1C1917] placeholder:text-[#78716C]/70 shadow-xs focus:outline-none focus:border-[#B45309] focus:ring-2 focus:ring-[#B45309]/15 transition-all"
-            />
-          </div>
-
-          <div>
-            <label className="block text-[11px] font-mono uppercase tracking-[0.06em] text-[#78716C] mb-1.5">
-              {t.isbnLabel} <span className="text-[#991B1B]">*</span>
-            </label>
-            <input
-              type="text"
-              required
-              value={isbn}
-              onChange={(e) => setIsbn(e.target.value)}
-              placeholder="978-0-13-518838-0"
-              className="w-full h-10 px-3.5 bg-white border border-[#E7E5E4] rounded-md text-base sm:text-sm font-mono text-[#1C1917] placeholder:text-[#78716C]/70 shadow-xs focus:outline-none focus:border-[#B45309] focus:ring-2 focus:ring-[#B45309]/15 transition-all uppercase"
             />
           </div>
 

@@ -135,9 +135,9 @@ export default function StudentSearchView() {
         {showDropdown && !selectedStudent && filteredStudents.length > 0 && (
           <div
             ref={dropdownRef}
-            className="absolute top-full mt-1.5 w-full bg-white border border-[#E7E5E4] rounded-lg shadow-card-hover overflow-hidden z-30 divide-y divide-[#E7E5E4]"
+            className="absolute top-full mt-1.5 w-full bg-white border border-[#E7E5E4] rounded-lg shadow-card-hover overflow-hidden z-30 divide-y divide-[#E7E5E4] max-h-80 overflow-y-auto"
           >
-            {filteredStudents.slice(0, 8).map((student) => {
+            {filteredStudents.slice(0, 1000).map((student) => {
               const initials = student.fullName
                 .split(' ')
                 .map((n) => n[0])
@@ -269,9 +269,11 @@ export default function StudentSearchView() {
                       <Barcode className="w-3 h-3 text-[#B45309] stroke-[1.5]" />
                       {t.copyBarcodeLabel} {r.copyBarcode}
                     </span>
-                    <span className="text-[11px] font-mono text-[#78716C]">
-                      ISBN: {r.bookIsbn}
-                    </span>
+                    {r.bookIsbn && (
+                      <span className="text-[11px] font-mono text-[#78716C]">
+                        ISBN: {r.bookIsbn}
+                      </span>
+                    )}
                   </div>
 
                   <div className="flex items-center gap-3 mt-1.5 text-xs font-mono text-[#78716C] flex-wrap">
@@ -347,9 +349,11 @@ export default function StudentSearchView() {
                       <Barcode className="w-3 h-3 text-[#78716C] stroke-[1.5]" />
                       {t.copyBarcodeLabel} {r.copyBarcode}
                     </span>
-                    <span className="text-[11px] font-mono text-[#78716C]">
-                      ISBN: {r.bookIsbn}
-                    </span>
+                    {r.bookIsbn && (
+                      <span className="text-[11px] font-mono text-[#78716C]">
+                        ISBN: {r.bookIsbn}
+                      </span>
+                    )}
                   </div>
 
                   <div className="flex items-center gap-3 mt-1.5 text-xs font-mono text-[#78716C] flex-wrap">
@@ -391,8 +395,8 @@ export default function StudentSearchView() {
         </div>
       )}
 
-      {/* ACTIONABLE LAUNCHPAD: Instead of a giant blank box, display Quick-Access Student Records */}
-      {!selectedStudent && !searchQuery && (
+      {/* ACTIONABLE LAUNCHPAD: Directory scrollable to view all kids up to 1000 */}
+      {!selectedStudent && (
         <div className="bg-white border border-[#E7E5E4] rounded-lg p-4 sm:p-6 shadow-card">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 sm:gap-4 pb-3.5 sm:pb-4 mb-3.5 sm:mb-4 border-b border-[#E7E5E4]">
             <div>
@@ -405,7 +409,7 @@ export default function StudentSearchView() {
             </div>
             <div className="flex items-center gap-2 flex-wrap">
               <span className="self-start sm:self-auto text-xs font-mono text-[#78716C] bg-[#FAF8F5] px-2 py-0.5 rounded border border-[#E7E5E4]">
-                {t.studentsEnrolledCount(students.length)}
+                {t.studentsEnrolledCount(searchQuery.trim() ? filteredStudents.length : students.length)}
               </span>
               <button
                 type="button"
@@ -418,52 +422,64 @@ export default function StudentSearchView() {
             </div>
           </div>
 
-          {/* Cards Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-3.5">
-            {students.slice(0, 6).map((student) => {
-              const initials = student.fullName
-                .split(' ')
-                .map((n) => n[0])
-                .slice(0, 2)
-                .join('');
+          {/* Cards Grid: Scrollable container to browse all kids (up to 1000) */}
+          {(searchQuery.trim() ? filteredStudents : students).length > 0 ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-3.5 max-h-[680px] overflow-y-auto pe-1.5">
+              {(searchQuery.trim() ? filteredStudents : students).slice(0, 1000).map((student) => {
+                const initials = student.fullName
+                  .split(' ')
+                  .map((n) => n[0])
+                  .slice(0, 2)
+                  .join('');
 
-              return (
-                <button
-                  key={student.id}
-                  onClick={() => handleSelectStudent(student)}
-                  className="group relative flex flex-col justify-between p-3.5 sm:p-4 bg-[#FAF8F5] hover:bg-[#F3EFEA] border border-[#E7E5E4] hover:border-[#D6D3D1] rounded-lg text-start transition-all duration-150 cursor-pointer shadow-xs hover:shadow-card active:scale-[0.99]"
-                >
-                  <div className="flex items-start gap-3">
-                    <div className="w-8 h-8 rounded-md bg-white border border-[#E7E5E4] text-[#1C1917] flex items-center justify-center text-xs font-mono font-medium shrink-0 shadow-xs">
-                      {initials}
+                return (
+                  <button
+                    key={student.id}
+                    onClick={() => handleSelectStudent(student)}
+                    className="group relative flex flex-col justify-between p-3.5 sm:p-4 bg-[#FAF8F5] hover:bg-[#F3EFEA] border border-[#E7E5E4] hover:border-[#D6D3D1] rounded-lg text-start transition-all duration-150 cursor-pointer shadow-xs hover:shadow-card active:scale-[0.99]"
+                  >
+                    <div className="flex items-start gap-3">
+                      <div className="w-8 h-8 rounded-md bg-white border border-[#E7E5E4] text-[#1C1917] flex items-center justify-center text-xs font-mono font-medium shrink-0 shadow-xs">
+                        {initials}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <h4 className="text-sm font-semibold text-[#1C1917] group-hover:text-[#B45309] truncate transition-colors">
+                          {student.fullName}
+                        </h4>
+                        <p className="text-[11px] font-mono text-[#78716C] mt-0.5">
+                          {t.studentIdLabel} {student.studentId} · {t.cohort(student.className)}
+                        </p>
+                      </div>
                     </div>
-                    <div className="min-w-0 flex-1">
-                      <h4 className="text-sm font-semibold text-[#1C1917] group-hover:text-[#B45309] truncate transition-colors">
-                        {student.fullName}
-                      </h4>
-                      <p className="text-[11px] font-mono text-[#78716C] mt-0.5">
-                        {t.studentIdLabel} {student.studentId} · {t.cohort(student.className)}
-                      </p>
-                    </div>
-                  </div>
 
-                  <div className="flex items-center justify-between pt-3 mt-3 border-t border-[#E7E5E4] text-xs">
-                    <span className="font-mono text-[11px] text-[#B45309] bg-[#FEF3C7] px-1.5 py-0.2 rounded border border-[#FDE68A]">
-                      {gradeText(student.grade)}
-                    </span>
-                    <span className="inline-flex items-center gap-1 text-[11px] font-medium text-[#1C1917]">
-                      {t.viewDossier}
-                      {isRtl ? (
-                        <ArrowLeft className="w-3 h-3 stroke-[2] group-hover:-translate-x-0.5 transition-transform" />
-                      ) : (
-                        <ArrowRight className="w-3 h-3 stroke-[2] group-hover:translate-x-0.5 transition-transform" />
-                      )}
-                    </span>
-                  </div>
-                </button>
-              );
-            })}
-          </div>
+                    <div className="flex items-center justify-between pt-3 mt-3 border-t border-[#E7E5E4] text-xs">
+                      <span className="font-mono text-[11px] text-[#B45309] bg-[#FEF3C7] px-1.5 py-0.2 rounded border border-[#FDE68A]">
+                        {gradeText(student.grade)}
+                      </span>
+                      <span className="inline-flex items-center gap-1 text-[11px] font-medium text-[#1C1917]">
+                        {t.viewDossier}
+                        {isRtl ? (
+                          <ArrowLeft className="w-3 h-3 stroke-[2] group-hover:-translate-x-0.5 transition-transform" />
+                        ) : (
+                          <ArrowRight className="w-3 h-3 stroke-[2] group-hover:translate-x-0.5 transition-transform" />
+                        )}
+                      </span>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="p-8 text-center">
+              <User className="w-6 h-6 stroke-[1.5] text-[#78716C] mx-auto mb-2" />
+              <p className="text-sm font-semibold text-[#1C1917]">
+                {t.noStudentsMatch(searchQuery)}
+              </p>
+              <p className="text-xs text-[#78716C] mt-1">
+                {t.tryExactStudentId}
+              </p>
+            </div>
+          )}
 
           {/* Desktop Keyboard Shortcut Hint Bar (Hidden on Mobile) */}
           <div className="hidden sm:flex mt-5 pt-4 border-t border-[#E7E5E4] items-center justify-center gap-4 text-xs font-mono text-[#78716C] flex-wrap">
@@ -479,19 +495,6 @@ export default function StudentSearchView() {
               <CornerDownLeft className="w-3 h-3" /> {t.toInspect}
             </span>
           </div>
-        </div>
-      )}
-
-      {/* Search Not Found State */}
-      {!selectedStudent && searchQuery && filteredStudents.length === 0 && (
-        <div className="bg-white border border-[#E7E5E4] rounded-lg p-10 text-center shadow-card">
-          <User className="w-6 h-6 stroke-[1.5] text-[#78716C] mx-auto mb-2" />
-          <p className="text-sm font-semibold text-[#1C1917]">
-            {t.noStudentsMatch(searchQuery)}
-          </p>
-          <p className="text-xs text-[#78716C] mt-1">
-            {t.tryExactStudentId}
-          </p>
         </div>
       )}
 

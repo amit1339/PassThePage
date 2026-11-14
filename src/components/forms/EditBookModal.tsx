@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { X, Edit3, Loader2 } from 'lucide-react';
+import { X, Edit3, Loader2, Trash2 } from 'lucide-react';
 import { doc, updateDoc } from 'firebase/firestore';
 import { db, isFirebaseConfigured } from '../../lib/firebase';
 import type { Book } from '../../types/database';
@@ -10,6 +10,7 @@ interface EditBookModalProps {
   onClose: () => void;
   book: Book | null;
   onBookUpdated?: (updatedBook: Book) => void;
+  onDelete?: (bookId: string) => void;
 }
 
 const SUBJECT_OPTIONS = [
@@ -24,7 +25,13 @@ const SUBJECT_OPTIONS = [
   'Arts',
 ];
 
-export default function EditBookModal({ isOpen, onClose, book, onBookUpdated }: EditBookModalProps) {
+export default function EditBookModal({
+  isOpen,
+  onClose,
+  book,
+  onBookUpdated,
+  onDelete,
+}: EditBookModalProps) {
   const [title, setTitle] = useState('');
   const [isbn, setIsbn] = useState('');
   const [subject, setSubject] = useState('Science');
@@ -49,8 +56,8 @@ export default function EditBookModal({ isOpen, onClose, book, onBookUpdated }: 
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!title.trim() || !isbn.trim()) {
-      setError(lang === 'he' ? 'נא להזין שם ספר ומסת״ב (ISBN).' : 'Please provide a Book Title and ISBN.');
+    if (!title.trim()) {
+      setError(lang === 'he' ? 'נא להזין שם ספר.' : 'Please provide a Book Title.');
       return;
     }
 
@@ -195,29 +202,54 @@ export default function EditBookModal({ isOpen, onClose, book, onBookUpdated }: 
             </div>
           </div>
 
-          <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-[#E7E5E4]">
-            <button
-              type="button"
-              onClick={onClose}
-              disabled={isSubmitting}
-              className="px-3.5 py-2 sm:py-1.5 text-xs font-medium text-[#78716C] hover:text-[#1C1917] bg-white hover:bg-[#F3EFEA] border border-[#E7E5E4] rounded-md transition-colors cursor-pointer shadow-card min-h-[38px] sm:min-h-0"
-            >
-              {t.cancelButton}
-            </button>
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="flex items-center justify-center gap-1.5 px-4 py-2 sm:py-1.5 text-xs font-medium text-[#FAF8F5] bg-[#1C1917] hover:bg-[#292524] rounded-md transition-colors cursor-pointer disabled:opacity-60 shadow-card min-h-[38px] sm:min-h-0"
-            >
-              {isSubmitting ? (
-                <>
-                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                  {t.updatingButton}
-                </>
-              ) : (
-                t.saveChangesButton
-              )}
-            </button>
+          <div className="flex items-center justify-between gap-2.5 pt-3 border-t border-[#E7E5E4]">
+            {onDelete && (
+              <button
+                type="button"
+                onClick={() => {
+                  if (
+                    window.confirm(
+                      lang === 'he'
+                        ? `האם אתה בטוח שברצונך למחוק את "${book.title}" מהקטלוג?`
+                        : `Are you sure you want to delete "${book.title}" from the catalog?`
+                    )
+                  ) {
+                    onDelete(book.id);
+                    onClose();
+                  }
+                }}
+                disabled={isSubmitting}
+                className="inline-flex items-center gap-1.5 px-3 py-2 sm:py-1.5 text-xs font-medium text-[#991B1B] bg-white hover:bg-[#FEF2F2] border border-[#FECACA] rounded-md transition-colors cursor-pointer shadow-xs min-h-[38px] sm:min-h-0"
+              >
+                <Trash2 className="w-3.5 h-3.5 stroke-[1.5]" />
+                <span>{lang === 'he' ? 'מחיקת ספר' : 'Delete Book'}</span>
+              </button>
+            )}
+
+            <div className="flex items-center gap-2.5 ms-auto">
+              <button
+                type="button"
+                onClick={onClose}
+                disabled={isSubmitting}
+                className="px-3.5 py-2 sm:py-1.5 text-xs font-medium text-[#78716C] hover:text-[#1C1917] bg-white hover:bg-[#F3EFEA] border border-[#E7E5E4] rounded-md transition-colors cursor-pointer shadow-card min-h-[38px] sm:min-h-0"
+              >
+                {t.cancelButton}
+              </button>
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="flex items-center justify-center gap-1.5 px-4 py-2 sm:py-1.5 text-xs font-medium text-[#FAF8F5] bg-[#1C1917] hover:bg-[#292524] rounded-md transition-colors cursor-pointer disabled:opacity-60 shadow-card min-h-[38px] sm:min-h-0"
+              >
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    {t.updatingButton}
+                  </>
+                ) : (
+                  t.saveChangesButton
+                )}
+              </button>
+            </div>
           </div>
         </form>
       </div>

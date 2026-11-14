@@ -56,7 +56,7 @@ export default function AssignBookModal({
       const q = bookSearch.toLowerCase();
       return (
         book.title.toLowerCase().includes(q) ||
-        book.isbn.toLowerCase().includes(q) ||
+        (book.isbn && book.isbn.toLowerCase().includes(q)) ||
         book.subject.toLowerCase().includes(q) ||
         book.gradeLevel.toLowerCase().includes(q)
       );
@@ -229,7 +229,7 @@ export default function AssignBookModal({
                         )}
                       </div>
                       <p className="text-[11px] font-mono text-[#78716C] mt-0.5">
-                        {book.isbn} · {book.subject}
+                        {book.isbn ? `${book.isbn} · ${book.subject}` : book.subject}
                       </p>
                     </div>
 
