@@ -156,7 +156,7 @@ export function useStudentRentals(searchQuery: string) {
 
   // Assign a book to the selected student
   const assignBook = useCallback(
-    async (bookId: string, copyBarcode: string) => {
+    async (bookId: string, copyBarcode: string, issueDate?: string | Date) => {
       if (!selectedStudent) return;
 
       const book = allBooks.find((b) => b.id === bookId);
@@ -167,6 +167,21 @@ export function useStudentRentals(searchQuery: string) {
         throw new Error(check.reason || `Grade ${selectedStudent.grade} students cannot borrow Grade ${check.bookGrade} textbooks.`);
       }
 
+      let rentTimestamp: Timestamp;
+      if (issueDate) {
+        if (issueDate instanceof Date) {
+          rentTimestamp = Timestamp.fromDate(issueDate);
+        } else {
+          const parsed = new Date(issueDate.includes('T') ? issueDate : `${issueDate}T12:00:00`);
+          rentTimestamp = isNaN(parsed.getTime()) ? Timestamp.now() : Timestamp.fromDate(parsed);
+        }
+      } else {
+        rentTimestamp = Timestamp.now();
+      }
+
+      const rentDateObj = rentTimestamp.toDate();
+      const dueDateObj = new Date(rentDateObj.getTime() + 90 * 24 * 60 * 60 * 1000);
+
       const newRental: Omit<Rental, 'id'> = {
         bookId: book.id,
         bookTitle: book.title,
@@ -176,8 +191,8 @@ export function useStudentRentals(searchQuery: string) {
         studentSchoolId: selectedStudent.studentId,
         studentName: selectedStudent.fullName,
         className: selectedStudent.className,
-        rentedAt: Timestamp.now(),
-        dueDate: Timestamp.fromDate(new Date(Date.now() + 90 * 24 * 60 * 60 * 1000)),
+        rentedAt: rentTimestamp,
+        dueDate: Timestamp.fromDate(dueDateObj),
         returnedAt: null,
         status: 'active',
       };

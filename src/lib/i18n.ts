@@ -119,6 +119,8 @@ export interface Translations {
   filterGradeOnly: (grade: number) => string;
   showingAllGrades: string;
   barcodeStickerLabel: string;
+  issueDateLabel: string;
+  setTodayLabel: string;
   completeIssuanceButton: string;
   issuingButton: string;
   noEligibleBooksFound: (grade: number) => string;
@@ -255,6 +257,8 @@ export const translations: Record<Language, Translations> = {
     filterGradeOnly: (grade) => `Grade ${grade} Only`,
     showingAllGrades: 'Showing All',
     barcodeStickerLabel: 'Copy Barcode / Sticker ID',
+    issueDateLabel: 'Issue Date',
+    setTodayLabel: 'Today',
     completeIssuanceButton: 'Complete Issuance',
     issuingButton: 'Issuing...',
     noEligibleBooksFound: (g) => `No books designated for Grade ${g}. Click "Showing All" to browse.`,
@@ -388,6 +392,8 @@ export const translations: Record<Language, Translations> = {
     filterGradeOnly: (grade) => `שכבה ${formatGradeLetter(grade)} בלבד`,
     showingAllGrades: 'הצגת כל השכבות',
     barcodeStickerLabel: 'ברקוד / מזהה מדבקת עותק',
+    issueDateLabel: 'תאריך השאלה',
+    setTodayLabel: 'היום',
     completeIssuanceButton: 'אישור השאלה',
     issuingButton: 'מבצע השאלה...',
     noEligibleBooksFound: (g) => `לא נמצאו ספרים המיועדים לשכבה ${formatGradeLetter(g)}. לחץ "הצגת כל השכבות" לעיון.`,

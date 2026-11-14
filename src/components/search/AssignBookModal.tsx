@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { X, BookOpen, Plus, Barcode, Check, ShieldAlert, Filter } from 'lucide-react';
+import { X, BookOpen, Plus, Barcode, Check, ShieldAlert, Filter, Calendar } from 'lucide-react';
 import type { Book } from '../../types/database';
 import { isGradeEligible, formatGradeText, formatGradeLetter } from '../../lib/gradeUtils';
 import { useLanguage } from '../../context/LanguageContext';
@@ -7,10 +7,18 @@ import { useLanguage } from '../../context/LanguageContext';
 interface AssignBookModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onAssign: (bookId: string, copyBarcode: string) => Promise<void> | void;
+  onAssign: (bookId: string, copyBarcode: string, issueDate?: string) => Promise<void> | void;
   books: Book[];
   studentName: string;
   studentGrade?: number;
+}
+
+function getTodayString() {
+  const d = new Date();
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
 }
 
 export default function AssignBookModal({
@@ -23,6 +31,7 @@ export default function AssignBookModal({
 }: AssignBookModalProps) {
   const [selectedBookId, setSelectedBookId] = useState('');
   const [copyBarcode, setCopyBarcode] = useState('');
+  const [issueDate, setIssueDate] = useState(() => getTodayString());
   const [bookSearch, setBookSearch] = useState('');
   const [showOnlyEligible, setShowOnlyEligible] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -100,10 +109,11 @@ export default function AssignBookModal({
     setError(null);
 
     try {
-      await onAssign(selectedBookId, copyBarcode.trim().toUpperCase());
+      await onAssign(selectedBookId, copyBarcode.trim().toUpperCase(), issueDate);
       setSelectedBookId('');
       setCopyBarcode('');
       setBookSearch('');
+      setIssueDate(getTodayString());
       onClose();
     } catch (err: any) {
       console.error(err);
@@ -247,22 +257,52 @@ export default function AssignBookModal({
             </div>
           </div>
 
-          <div>
-            <label className="block text-[11px] font-mono uppercase tracking-[0.06em] text-[#78716C] mb-1.5">
-              {t.barcodeStickerLabel} <span className="text-[#991B1B]">*</span>
-            </label>
-            <div className="relative">
-              <div className="absolute start-3 top-1/2 -translate-y-1/2 text-[#78716C]">
-                <Barcode className="w-4 h-4 stroke-[1.5]" />
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+            <div>
+              <label className="block text-[11px] font-mono uppercase tracking-[0.06em] text-[#78716C] mb-1.5">
+                {t.barcodeStickerLabel} <span className="text-[#991B1B]">*</span>
+              </label>
+              <div className="relative">
+                <div className="absolute start-3 top-1/2 -translate-y-1/2 text-[#78716C]">
+                  <Barcode className="w-4 h-4 stroke-[1.5]" />
+                </div>
+                <input
+                  type="text"
+                  required
+                  value={copyBarcode}
+                  onChange={(e) => setCopyBarcode(e.target.value)}
+                  placeholder="e.g. BIO-042, CALC-109"
+                  className="w-full h-10 ps-9 pe-3.5 bg-white border border-[#E7E5E4] rounded-md text-base sm:text-sm font-mono uppercase text-[#1C1917] placeholder:text-[#78716C]/70 shadow-xs focus:outline-none focus:border-[#B45309] focus:ring-2 focus:ring-[#B45309]/15 transition-all"
+                />
               </div>
-              <input
-                type="text"
-                required
-                value={copyBarcode}
-                onChange={(e) => setCopyBarcode(e.target.value)}
-                placeholder="e.g. BIO-042, CALC-109"
-                className="w-full h-10 ps-9 pe-3.5 bg-white border border-[#E7E5E4] rounded-md text-base sm:text-sm font-mono uppercase text-[#1C1917] placeholder:text-[#78716C]/70 shadow-xs focus:outline-none focus:border-[#B45309] focus:ring-2 focus:ring-[#B45309]/15 transition-all"
-              />
+            </div>
+
+            <div>
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="block text-[11px] font-mono uppercase tracking-[0.06em] text-[#78716C]">
+                  {t.issueDateLabel}
+                </label>
+                {issueDate !== getTodayString() && (
+                  <button
+                    type="button"
+                    onClick={() => setIssueDate(getTodayString())}
+                    className="text-[11px] font-mono text-[#B45309] hover:underline cursor-pointer"
+                  >
+                    {t.setTodayLabel}
+                  </button>
+                )}
+              </div>
+              <div className="relative">
+                <div className="absolute start-3 top-1/2 -translate-y-1/2 text-[#78716C] pointer-events-none">
+                  <Calendar className="w-4 h-4 stroke-[1.5]" />
+                </div>
+                <input
+                  type="date"
+                  value={issueDate}
+                  onChange={(e) => setIssueDate(e.target.value)}
+                  className="w-full h-10 ps-9 pe-3.5 bg-white border border-[#E7E5E4] rounded-md text-base sm:text-sm font-mono text-[#1C1917] shadow-xs focus:outline-none focus:border-[#B45309] focus:ring-2 focus:ring-[#B45309]/15 transition-all cursor-pointer"
+                />
+              </div>
             </div>
           </div>
 
