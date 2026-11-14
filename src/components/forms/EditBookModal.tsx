@@ -33,7 +33,6 @@ export default function EditBookModal({
   onDelete,
 }: EditBookModalProps) {
   const [title, setTitle] = useState('');
-  const [isbn, setIsbn] = useState('');
   const [subject, setSubject] = useState('Science');
   const [gradeLevel, setGradeLevel] = useState('10th Grade');
   const [totalCopies, setTotalCopies] = useState<number>(30);
@@ -44,7 +43,6 @@ export default function EditBookModal({
   useEffect(() => {
     if (book) {
       setTitle(book.title || '');
-      setIsbn(book.isbn || '');
       setSubject(book.subject || 'Science');
       setGradeLevel(book.gradeLevel || '10th Grade');
       setTotalCopies(book.totalCopies || 30);
@@ -70,7 +68,7 @@ export default function EditBookModal({
 
     const updatedData: Partial<Book> = {
       title: title.trim(),
-      isbn: isbn.trim().toUpperCase(),
+      isbn: book.isbn || '',
       subject,
       gradeLevel: gradeLevel.trim() || 'General',
       totalCopies: newTotalCopies,
@@ -145,19 +143,6 @@ export default function EditBookModal({
             />
           </div>
 
-          <div>
-            <label className="block text-[11px] font-mono uppercase tracking-[0.06em] text-[#78716C] mb-1.5">
-              {t.isbnLabel} <span className="text-[#991B1B]">*</span>
-            </label>
-            <input
-              type="text"
-              required
-              value={isbn}
-              onChange={(e) => setIsbn(e.target.value)}
-              placeholder="978-0-13-518838-0"
-              className="w-full h-10 px-3.5 bg-white border border-[#E7E5E4] rounded-md text-base sm:text-sm font-mono text-[#1C1917] placeholder:text-[#78716C]/70 shadow-xs focus:outline-none focus:border-[#B45309] focus:ring-2 focus:ring-[#B45309]/15 transition-all uppercase"
-            />
-          </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div>
