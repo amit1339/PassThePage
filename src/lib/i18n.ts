@@ -1,3 +1,5 @@
+import { formatGradeLetter } from './gradeUtils';
+
 export type Language = 'en' | 'he';
 
 export interface Translations {
@@ -61,6 +63,9 @@ export interface Translations {
   viewDossier: string;
   noStudentsMatch: (q: string) => string;
   tryExactStudentId: string;
+  returnedHistoryTitle: (count: number) => string;
+  returnedDateLabel: string;
+  noReturnedHistory: string;
 
   // Class Accordion
   gradeAndClass: (grade: string, section?: string) => string;
@@ -118,6 +123,20 @@ export interface Translations {
   issuingButton: string;
   noEligibleBooksFound: (grade: number) => string;
   noBooksInCatalog: string;
+
+  // Modals - Import Students Excel
+  importExcelButton: string;
+  importExcelTitle: string;
+  importExcelSub: string;
+  dragOrClickExcel: string;
+  parsingExcel: string;
+  previewStudentsTitle: (count: number) => string;
+  importSuccess: (count: number) => string;
+  importConfirmButton: (count: number) => string;
+  importingButton: string;
+  invalidExcelFormat: string;
+  selectExcelFilePrompt: string;
+  sampleFileHint: string;
 
   // Footer & Alerts
   footerText: string;
@@ -186,6 +205,9 @@ export const translations: Record<Language, Translations> = {
     viewDossier: 'View Dossier',
     noStudentsMatch: (q) => `No student files matched "${q}"`,
     tryExactStudentId: 'Try searching by exact student ID (e.g. 2026-1001) or use "+ Enroll Student" above.',
+    returnedHistoryTitle: (c) => `Returned Books History (${c})`,
+    returnedDateLabel: 'Returned:',
+    noReturnedHistory: 'No returned textbook history recorded for this student.',
 
     gradeAndClass: (grade, section) => (section ? `Grade ${grade} — Class ${section}` : `Grade ${grade}`),
     cohort: (cls) => `Cohort ${cls}`,
@@ -237,6 +259,19 @@ export const translations: Record<Language, Translations> = {
     issuingButton: 'Issuing...',
     noEligibleBooksFound: (g) => `No books designated for Grade ${g}. Click "Showing All" to browse.`,
     noBooksInCatalog: 'No books found.',
+
+    importExcelButton: 'Import Excel',
+    importExcelTitle: 'Import Students from Excel',
+    importExcelSub: 'Bulk upload class rosters via .xlsx spreadsheet',
+    dragOrClickExcel: 'Drop an .xlsx student roster here, or click to browse',
+    parsingExcel: 'Reading Excel workbook...',
+    previewStudentsTitle: (c) => `Preview (${c} students detected)`,
+    importSuccess: (c) => `Successfully enrolled ${c} students!`,
+    importConfirmButton: (c) => `Import ${c} Students`,
+    importingButton: 'Importing to Firestore...',
+    invalidExcelFormat: 'Could not detect required columns (ID, Name, Grade, Class) in this Excel sheet.',
+    selectExcelFilePrompt: 'Please select an Excel (.xlsx) file',
+    sampleFileHint: 'Supports standard Ministry/School rosters with ת.ז, שם, כיתה, מקבילה',
 
     footerText: 'PassThePage · Boutique Editorial Circulation System ·',
     firestoreLiveBadge: 'Cloud Firestore Live',
@@ -303,6 +338,9 @@ export const translations: Record<Language, Translations> = {
     viewDossier: 'לתיק התלמיד',
     noStudentsMatch: (q) => `לא נמצאו תלמידים התואמים את "${q}"`,
     tryExactStudentId: 'נסה לחפש לפי מזהה תלמיד מלא או לחץ על "+ רישום תלמיד" בסרגל העליון.',
+    returnedHistoryTitle: (c) => `היסטוריית ספרים שהוחזרו (${c})`,
+    returnedDateLabel: 'תאריך החזרה:',
+    noReturnedHistory: 'אין עדיין היסטוריית ספרים שהוחזרו לתלמיד זה.',
 
     gradeAndClass: (grade, section) => (section ? `שכבה ${grade} — כיתה ${section}` : `שכבה ${grade}`),
     cohort: (cls) => `כיתה ${cls}`,
@@ -345,15 +383,28 @@ export const translations: Record<Language, Translations> = {
     issueRentalTitle: 'השאלת ספר לימוד',
     issueRentalSub: (name) => `השאלה לתלמיד/ה: ${name}`,
     selectBookLabel: 'בחירת ספר לימוד מהקטלוג',
-    gradeMatchTag: (grade) => `שכבה ${grade}`,
-    gradeMismatchTag: (grade) => `מיועד לשכבה ${grade}`,
-    filterGradeOnly: (grade) => `שכבה ${grade} בלבד`,
+    gradeMatchTag: (grade) => `שכבה ${formatGradeLetter(grade)}`,
+    gradeMismatchTag: (grade) => `מיועד לשכבה ${formatGradeLetter(grade)}`,
+    filterGradeOnly: (grade) => `שכבה ${formatGradeLetter(grade)} בלבד`,
     showingAllGrades: 'הצגת כל השכבות',
     barcodeStickerLabel: 'ברקוד / מזהה מדבקת עותק',
     completeIssuanceButton: 'אישור השאלה',
     issuingButton: 'מבצע השאלה...',
-    noEligibleBooksFound: (g) => `לא נמצאו ספרים המיועדים לשכבה ${g}. לחץ "הצגת כל השכבות" לעיון.`,
+    noEligibleBooksFound: (g) => `לא נמצאו ספרים המיועדים לשכבה ${formatGradeLetter(g)}. לחץ "הצגת כל השכבות" לעיון.`,
     noBooksInCatalog: 'לא נמצאו ספרים בקטלוג.',
+
+    importExcelButton: 'ייבוא מאקסל',
+    importExcelTitle: 'ייבוא תלמידים מקובץ אקסל',
+    importExcelSub: 'הזנה מרוכזת של רשימות תלמידים מקובץ .xlsx',
+    dragOrClickExcel: 'גרור ושחרר קובץ אקסל (.xlsx) לכאן, או לחץ לבחירת קובץ',
+    parsingExcel: 'קורא את גיליון האקסל...',
+    previewStudentsTitle: (c) => `תצוגה מקדימה (${c} תלמידים זוהו בקובץ)`,
+    importSuccess: (c) => `ייבוא ${c} תלמידים הושלם בהצלחה!`,
+    importConfirmButton: (c) => `ייבוא ${c} תלמידים למערכת`,
+    importingButton: 'מייבא למסד הנתונים...',
+    invalidExcelFormat: 'לא נמצאו עמודות תלמידים מזוהות (ת.ז, שם פרטי/משפחה, כיתה, מקבילה). אנא בדוק את מבנה הקובץ.',
+    selectExcelFilePrompt: 'אנא בחר קובץ אקסל (.xlsx)',
+    sampleFileHint: 'תומך בפורמט קובץ בית-ספרי עם עמודות ת.ז, שם משפחה, שם פרטי, כיתה, מקבילה',
 
     footerText: 'PassThePage · מערכת ניהול השאלת ספרי לימוד ·',
     firestoreLiveBadge: 'סנכרון ענן חי (Firestore)',

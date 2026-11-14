@@ -11,11 +11,20 @@ interface AddStudentModalProps {
   onStudentAdded?: (student: Student) => void;
 }
 
+const GRADE_CHOICES = [
+  { value: 7, he: 'ז', en: '7' },
+  { value: 8, he: 'ח', en: '8' },
+  { value: 9, he: 'ט', en: '9' },
+  { value: 10, he: 'י', en: '10' },
+  { value: 11, he: 'יא', en: '11' },
+  { value: 12, he: 'יב', en: '12' },
+];
+
 export default function AddStudentModal({ isOpen, onClose, onStudentAdded }: AddStudentModalProps) {
   const [fullName, setFullName] = useState('');
   const [studentId, setStudentId] = useState('');
-  const [className, setClassName] = useState('10-A');
-  const [grade, setGrade] = useState<number>(10);
+  const [className, setClassName] = useState('');
+  const [grade, setGrade] = useState<number>(7);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { t, lang } = useLanguage();
@@ -25,7 +34,7 @@ export default function AddStudentModal({ isOpen, onClose, onStudentAdded }: Add
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!fullName.trim() || !studentId.trim() || !className.trim()) {
-      setError(lang === 'he' ? 'נא למלא את כל שדות פרטי התלמיד.' : 'Please fill in all student information fields.');
+      setError(lang === 'he' ? 'נא למלא את כל שדות פרטי התלמיד (כולל כיתת אם).' : 'Please fill in all student information fields.');
       return;
     }
 
@@ -36,7 +45,7 @@ export default function AddStudentModal({ isOpen, onClose, onStudentAdded }: Add
       fullName: fullName.trim(),
       studentId: studentId.trim().toUpperCase(),
       className: className.trim().toUpperCase(),
-      grade: Number(grade) || 10,
+      grade: Number(grade) || 7,
       activeRentalsCount: 0,
     };
 
@@ -51,8 +60,8 @@ export default function AddStudentModal({ isOpen, onClose, onStudentAdded }: Add
 
       setFullName('');
       setStudentId('');
-      setClassName('10-A');
-      setGrade(10);
+      setClassName('');
+      setGrade(7);
       onClose();
     } catch (err: any) {
       console.error(err);
@@ -109,7 +118,7 @@ export default function AddStudentModal({ isOpen, onClose, onStudentAdded }: Add
               required
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
-              placeholder="e.g. Eleanor Vance"
+              placeholder={lang === 'he' ? 'למשל: עידו אביבי' : 'e.g. Eleanor Vance'}
               className="w-full h-10 px-3.5 bg-white border border-[#E7E5E4] rounded-md text-base sm:text-sm text-[#1C1917] placeholder:text-[#78716C]/70 shadow-xs focus:outline-none focus:border-[#B45309] focus:ring-2 focus:ring-[#B45309]/15 transition-all"
             />
           </div>
@@ -123,7 +132,7 @@ export default function AddStudentModal({ isOpen, onClose, onStudentAdded }: Add
               required
               value={studentId}
               onChange={(e) => setStudentId(e.target.value)}
-              placeholder="e.g. 2026-4091"
+              placeholder={lang === 'he' ? 'למשל: 221608623' : 'e.g. 2026-4091'}
               className="w-full h-10 px-3.5 bg-white border border-[#E7E5E4] rounded-md text-base sm:text-sm font-mono text-[#1C1917] placeholder:text-[#78716C]/70 shadow-xs focus:outline-none focus:border-[#B45309] focus:ring-2 focus:ring-[#B45309]/15 transition-all uppercase"
             />
           </div>
@@ -138,7 +147,7 @@ export default function AddStudentModal({ isOpen, onClose, onStudentAdded }: Add
                 required
                 value={className}
                 onChange={(e) => setClassName(e.target.value)}
-                placeholder="e.g. 10-A, 11-Honors"
+                placeholder={lang === 'he' ? 'למשל: ח-1, י-2' : 'e.g. 10-A, 11-Honors'}
                 className="w-full h-10 px-3.5 bg-white border border-[#E7E5E4] rounded-md text-base sm:text-sm font-mono text-[#1C1917] placeholder:text-[#78716C]/70 shadow-xs focus:outline-none focus:border-[#B45309] focus:ring-2 focus:ring-[#B45309]/15 transition-all uppercase"
               />
             </div>
@@ -151,9 +160,9 @@ export default function AddStudentModal({ isOpen, onClose, onStudentAdded }: Add
                 onChange={(e) => setGrade(Number(e.target.value))}
                 className="w-full h-10 px-3 bg-white border border-[#E7E5E4] rounded-md text-base sm:text-sm text-[#1C1917] shadow-xs focus:outline-none focus:border-[#B45309] focus:ring-2 focus:ring-[#B45309]/15 transition-all"
               >
-                {[7, 8, 9, 10, 11, 12].map((g) => (
-                  <option key={g} value={g}>
-                    {lang === 'he' ? `שכבה ${g}` : `Grade ${g}`}
+                {GRADE_CHOICES.map((g) => (
+                  <option key={g.value} value={g.value}>
+                    {lang === 'he' ? g.he : `Grade ${g.en}`}
                   </option>
                 ))}
               </select>

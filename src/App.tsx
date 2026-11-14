@@ -5,6 +5,7 @@ import BookSearchView from './components/search/BookSearchView';
 import StudentSearchView from './components/search/StudentSearchView';
 import AddBookModal from './components/forms/AddBookModal';
 import AddStudentModal from './components/forms/AddStudentModal';
+import ImportStudentsModal from './components/forms/ImportStudentsModal';
 import { isFirebaseConfigured, db } from './lib/firebase';
 import { collection, onSnapshot } from 'firebase/firestore';
 import { seedBooks, seedStudents, seedRentals } from './lib/seedData';
@@ -17,6 +18,7 @@ export default function App() {
   const [mode, setMode] = useState<Mode>('book');
   const [isAddBookOpen, setIsAddBookOpen] = useState(false);
   const [isAddStudentOpen, setIsAddStudentOpen] = useState(false);
+  const [isImportExcelOpen, setIsImportExcelOpen] = useState(false);
   const [permissionError, setPermissionError] = useState(false);
   const { t } = useLanguage();
 
@@ -100,6 +102,7 @@ export default function App() {
       <Navbar
         onOpenAddBook={() => setIsAddBookOpen(true)}
         onOpenAddStudent={() => setIsAddStudentOpen(true)}
+        onOpenImportExcel={() => setIsImportExcelOpen(true)}
         stats={stats}
       />
 
@@ -173,6 +176,10 @@ export default function App() {
       <AddStudentModal
         isOpen={isAddStudentOpen}
         onClose={() => setIsAddStudentOpen(false)}
+      />
+      <ImportStudentsModal
+        isOpen={isImportExcelOpen}
+        onClose={() => setIsImportExcelOpen(false)}
       />
 
       {/* Refined Footer with Pulsing Emerald Status Dot */}

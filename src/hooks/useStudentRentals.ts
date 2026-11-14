@@ -101,7 +101,7 @@ export function useStudentRentals(searchQuery: string) {
 
     if (!isFirebaseConfigured || !db) {
       const studentRentals = seedRentals.filter(
-        (r) => r.studentDocId === selectedStudent.id && r.status === 'active'
+        (r) => r.studentDocId === selectedStudent.id
       );
       setRentals(studentRentals);
       return;
@@ -109,8 +109,7 @@ export function useStudentRentals(searchQuery: string) {
 
     const q = query(
       collection(db, 'rentals'),
-      where('studentDocId', '==', selectedStudent.id),
-      where('status', '==', 'active')
+      where('studentDocId', '==', selectedStudent.id)
     );
     const unsub = onSnapshot(
       q,
@@ -128,7 +127,13 @@ export function useStudentRentals(searchQuery: string) {
   const returnBook = useCallback(
     async (rentalId: string) => {
       if (!isFirebaseConfigured || !db) {
-        setRentals((prev) => prev.filter((r) => r.id !== rentalId));
+        setRentals((prev) =>
+          prev.map((r) =>
+            r.id === rentalId
+              ? { ...r, status: 'returned', returnedAt: Timestamp.now() }
+              : r
+          )
+        );
         return;
       }
       await updateDoc(doc(db, 'rentals', rentalId), {
@@ -201,12 +206,32 @@ export function useStudentRentals(searchQuery: string) {
     [selectedStudent, allBooks]
   );
 
+  const activeRentals = useMemo(
+    () => rentals.filter((r) => r.status === 'active'),
+    [rentals]
+  );
+
+  const returnedRentals = useMemo(
+    () =>
+      rentals
+        .filter((r) => r.status === 'returned')
+        .sort((a, b) => {
+          const timeA = a.returnedAt?.seconds || 0;
+          const timeB = b.returnedAt?.seconds || 0;
+          return timeB - timeA;
+        }),
+    [rentals]
+  );
+
   return {
     students,
     filteredStudents,
     selectedStudent,
     setSelectedStudent,
-    rentals,
+    rentals: activeRentals,
+    activeRentals,
+    returnedRentals,
+    allStudentRentals: rentals,
     loading,
     returnBook,
     assignBook,

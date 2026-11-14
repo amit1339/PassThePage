@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { UserPlus, BookPlus, Database, Check, Languages } from 'lucide-react';
+import { UserPlus, BookPlus, Database, Check, Languages, FileSpreadsheet } from 'lucide-react';
 import { populateFirestoreWithSeedData } from '../../lib/dbSeeder';
 import { useLanguage } from '../../context/LanguageContext';
 import logoIcon from '../../assets/icon.jpg';
@@ -7,6 +7,7 @@ import logoIcon from '../../assets/icon.jpg';
 interface NavbarProps {
   onOpenAddBook: () => void;
   onOpenAddStudent: () => void;
+  onOpenImportExcel?: () => void;
   stats: {
     booksCount: number;
     studentsCount: number;
@@ -14,7 +15,12 @@ interface NavbarProps {
   };
 }
 
-export default function Navbar({ onOpenAddBook, onOpenAddStudent, stats }: NavbarProps) {
+export default function Navbar({
+  onOpenAddBook,
+  onOpenAddStudent,
+  onOpenImportExcel,
+  stats,
+}: NavbarProps) {
   const [seeding, setSeeding] = useState(false);
   const [seedSuccess, setSeedSuccess] = useState(false);
   const { lang, toggleLang, t } = useLanguage();
@@ -113,6 +119,18 @@ export default function Navbar({ onOpenAddBook, onOpenAddStudent, stats }: Navba
                 </>
               )}
             </button>
+
+            {/* Import Excel Button */}
+            {onOpenImportExcel && (
+              <button
+                onClick={onOpenImportExcel}
+                title={t.importExcelButton}
+                className="flex items-center justify-center gap-1.5 px-2.5 sm:px-3 py-1.5 text-xs font-medium text-[#1C1917] bg-white hover:bg-[#F3EFEA] border border-[#E7E5E4] rounded-md transition-all duration-150 cursor-pointer shadow-[0_1px_3px_rgba(28,25,23,0.04)] min-h-[34px] sm:min-h-0"
+              >
+                <FileSpreadsheet className="w-3.5 h-3.5 text-[#B45309] stroke-[1.5]" />
+                <span className="hidden sm:inline">{t.importExcelButton}</span>
+              </button>
+            )}
 
             {/* Enroll Student Button */}
             <button

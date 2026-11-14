@@ -24,14 +24,14 @@ const SUBJECT_OPTIONS = [
 ];
 
 export default function AddBookModal({ isOpen, onClose, onBookAdded }: AddBookModalProps) {
+  const { t, lang } = useLanguage();
   const [title, setTitle] = useState('');
   const [isbn, setIsbn] = useState('');
   const [subject, setSubject] = useState('Science');
-  const [gradeLevel, setGradeLevel] = useState('10th Grade');
+  const [gradeLevel, setGradeLevel] = useState(() => (lang === 'he' ? 'שכבה ח' : '8th Grade'));
   const [totalCopies, setTotalCopies] = useState<number>(30);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const { t, lang } = useLanguage();
 
   if (!isOpen) return null;
 
@@ -125,7 +125,7 @@ export default function AddBookModal({ isOpen, onClose, onBookAdded }: AddBookMo
               required
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="e.g. Campbell Biology 12th Edition"
+              placeholder={lang === 'he' ? 'למשל: פיזיקה לכיתה ח' : 'e.g. Campbell Biology 12th Edition'}
               className="w-full h-10 px-3.5 bg-white border border-[#E7E5E4] rounded-md text-base sm:text-sm text-[#1C1917] placeholder:text-[#78716C]/70 shadow-xs focus:outline-none focus:border-[#B45309] focus:ring-2 focus:ring-[#B45309]/15 transition-all"
             />
           </div>
@@ -169,7 +169,7 @@ export default function AddBookModal({ isOpen, onClose, onBookAdded }: AddBookMo
                 type="text"
                 value={gradeLevel}
                 onChange={(e) => setGradeLevel(e.target.value)}
-                placeholder="e.g. 10th Grade"
+                placeholder={lang === 'he' ? 'למשל: שכבה ח, ז, ט' : 'e.g. 8th Grade'}
                 className="w-full h-10 px-3 bg-white border border-[#E7E5E4] rounded-md text-base sm:text-sm text-[#1C1917] shadow-xs focus:outline-none focus:border-[#B45309] focus:ring-2 focus:ring-[#B45309]/15 transition-all"
               />
             </div>

@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import { X, BookOpen, Plus, Barcode, Check, ShieldAlert, Filter } from 'lucide-react';
 import type { Book } from '../../types/database';
-import { isGradeEligible } from '../../lib/gradeUtils';
+import { isGradeEligible, formatGradeText, formatGradeLetter } from '../../lib/gradeUtils';
 import { useLanguage } from '../../context/LanguageContext';
 
 interface AssignBookModalProps {
@@ -66,7 +66,7 @@ export default function AssignBookModal({
       setError(
         reason ||
           (lang === 'he'
-            ? `הגבלת מדיניות: תלמיד בשכבה ${studentGrade} אינו יכול לשאול ספר זה (${book.gradeLevel}).`
+            ? `הגבלת מדיניות: תלמיד בשכבה ${formatGradeLetter(studentGrade)} אינו יכול לשאול ספר זה (${book.gradeLevel}).`
             : `Policy Restriction: Grade ${studentGrade} students cannot borrow this book (${book.gradeLevel}).`)
       );
       return;
@@ -90,7 +90,7 @@ export default function AssignBookModal({
       setError(
         selectedItem.reason ||
           (lang === 'he'
-            ? `אי-התאמת שכבה: תלמיד בשכבה ${studentGrade} אינו רשאי לשאול ספר המיועד לשכבה ${selectedItem.bookGrade}.`
+            ? `אי-התאמת שכבה: תלמיד בשכבה ${formatGradeLetter(studentGrade)} אינו רשאי לשאול ספר המיועד לשכבה ${formatGradeLetter(selectedItem.bookGrade)}.`
             : `Grade mismatch: A student in Grade ${studentGrade} cannot borrow a textbook meant for Grade ${selectedItem.bookGrade}.`)
       );
       return;
@@ -134,7 +134,7 @@ export default function AssignBookModal({
                 </h3>
                 {studentGrade && (
                   <span className="text-[10px] font-mono px-1.5 py-0.2 rounded-md bg-[#FEF3C7] text-[#92400E] border border-[#FDE68A] font-medium">
-                    {lang === 'he' ? `שכבה ${studentGrade}` : `Grade ${studentGrade}`}
+                    {formatGradeText(studentGrade, lang)}
                   </span>
                 )}
               </div>

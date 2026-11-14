@@ -14,7 +14,7 @@ const LanguageContext = createContext<LanguageContextType | undefined>(undefined
 export function LanguageProvider({ children }: { children: ReactNode }) {
   const [lang, setLangState] = useState<Language>(() => {
     const saved = localStorage.getItem('passthepage_lang');
-    return saved === 'he' || saved === 'en' ? saved : 'en';
+    return saved === 'en' ? 'en' : 'he';
   });
 
   const isRtl = lang === 'he';
