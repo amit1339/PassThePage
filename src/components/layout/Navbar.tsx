@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { UserPlus, BookPlus, Database, Check, Languages, FileSpreadsheet } from 'lucide-react';
+import { UserPlus, BookPlus, Database, Check, Languages, FileSpreadsheet, Download, Loader2 } from 'lucide-react';
 import { populateFirestoreWithSeedData } from '../../lib/dbSeeder';
+import { exportBorrowingsToExcel } from '../../lib/exportExcel';
 import { useLanguage } from '../../context/LanguageContext';
 import logoIcon from '../../assets/icon.jpg';
 
@@ -23,7 +24,21 @@ export default function Navbar({
 }: NavbarProps) {
   const [seeding, setSeeding] = useState(false);
   const [seedSuccess, setSeedSuccess] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
   const { lang, toggleLang, t } = useLanguage();
+
+  const handleExportExcel = async () => {
+    setIsExporting(true);
+    try {
+      const result = await exportBorrowingsToExcel();
+      alert(t.exportSuccess(result.count));
+    } catch (err: any) {
+      console.error('Export error:', err);
+      alert(lang === 'he' ? 'שגיאה בייצוא לאקסל: ' + (err?.message || err) : 'Error exporting to Excel: ' + (err?.message || err));
+    } finally {
+      setIsExporting(false);
+    }
+  };
 
   const handleSeedDatabase = async () => {
     if (seeding) return;
@@ -131,6 +146,21 @@ export default function Navbar({
                 <span className="hidden sm:inline">{t.importExcelButton}</span>
               </button>
             )}
+
+            {/* Export Excel Button */}
+            <button
+              onClick={handleExportExcel}
+              disabled={isExporting}
+              title={t.exportExcelButton}
+              className="flex items-center justify-center gap-1.5 px-2.5 sm:px-3 py-1.5 text-xs font-medium text-[#065F46] bg-[#ECFDF5] hover:bg-[#A7F3D0]/60 border border-[#A7F3D0] rounded-md transition-all duration-150 cursor-pointer shadow-[0_1px_3px_rgba(28,25,23,0.04)] min-h-[34px] sm:min-h-0 disabled:opacity-50"
+            >
+              {isExporting ? (
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              ) : (
+                <Download className="w-3.5 h-3.5 stroke-[1.5]" />
+              )}
+              <span className="hidden sm:inline">{isExporting ? t.exportingExcel : t.exportExcelButton}</span>
+            </button>
 
             {/* Enroll Student Button */}
             <button

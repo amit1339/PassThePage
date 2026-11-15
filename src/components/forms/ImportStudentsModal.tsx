@@ -10,8 +10,9 @@ import {
   Check,
 } from 'lucide-react';
 import * as XLSX from 'xlsx';
-import { collection, writeBatch, doc } from 'firebase/firestore';
+import { collection, writeBatch, doc, getDocs } from 'firebase/firestore';
 import { db, isFirebaseConfigured } from '../../lib/firebase';
+import { seedStudents } from '../../lib/seedData';
 import type { Student } from '../../types/database';
 import { useLanguage } from '../../context/LanguageContext';
 import { HEBREW_LETTER_TO_GRADE, HEBREW_GRADE_LETTERS } from '../../lib/gradeUtils';
@@ -225,12 +226,23 @@ export default function ImportStudentsModal({
         }
       }
 
-      if (studentsFound.length === 0) {
+      // Deduplicate by studentId within the file
+      const uniqueStudents: ParsedStudentRow[] = [];
+      const seenIdsInFile = new Set<string>();
+      for (const s of studentsFound) {
+        const idKey = s.studentId.toUpperCase();
+        if (!seenIdsInFile.has(idKey)) {
+          seenIdsInFile.add(idKey);
+          uniqueStudents.push(s);
+        }
+      }
+
+      if (uniqueStudents.length === 0) {
         setError(t.invalidExcelFormat);
         setParsedStudents([]);
       } else {
         setError(null);
-        setParsedStudents(studentsFound);
+        setParsedStudents(uniqueStudents);
       }
     } catch (err: any) {
       console.error('Error reading excel file:', err);
@@ -301,13 +313,45 @@ export default function ImportStudentsModal({
         activeRentalsCount: 0,
       }));
 
+      // Check existing database records to prevent duplicate students
+      const existingStudentIds = new Set<string>();
+      if (isFirebaseConfigured && db) {
+        try {
+          const snap = await getDocs(collection(db, 'students'));
+          snap.docs.forEach((d) => {
+            const sid = (d.data().studentId || '').toString().trim().toUpperCase();
+            if (sid) existingStudentIds.add(sid);
+          });
+        } catch (e) {
+          console.warn('Error reading existing students for duplicate check:', e);
+        }
+      } else {
+        seedStudents.forEach((s) => {
+          if (s.studentId) existingStudentIds.add(s.studentId.toUpperCase());
+        });
+      }
+
+      const filteredToSave = newStudentsToSave.filter(
+        (s) => !existingStudentIds.has(s.studentId.toUpperCase())
+      );
+
+      if (filteredToSave.length === 0) {
+        setError(
+          lang === 'he'
+            ? 'כל התלמידים בקובץ זה כבר קיימים במערכת (לא נוספו כפילויות).'
+            : 'All students in this Excel file already exist in the system (no duplicates added).'
+        );
+        setIsImporting(false);
+        return;
+      }
+
       const savedStudents: Student[] = [];
 
       if (isFirebaseConfigured && db) {
         // Chunk into batches of 400 for Firestore limit (500 max operations per batch)
         const CHUNK_SIZE = 400;
-        for (let i = 0; i < newStudentsToSave.length; i += CHUNK_SIZE) {
-          const chunk = newStudentsToSave.slice(i, i + CHUNK_SIZE);
+        for (let i = 0; i < filteredToSave.length; i += CHUNK_SIZE) {
+          const chunk = filteredToSave.slice(i, i + CHUNK_SIZE);
           const batch = writeBatch(db);
 
           for (const s of chunk) {
@@ -320,7 +364,7 @@ export default function ImportStudentsModal({
         }
       } else {
         // Local state simulated import
-        newStudentsToSave.forEach((s, idx) => {
+        filteredToSave.forEach((s, idx) => {
           savedStudents.push({ id: `stu-import-${Date.now()}-${idx}`, ...s });
         });
       }

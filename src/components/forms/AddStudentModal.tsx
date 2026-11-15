@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { X, UserPlus, Loader2 } from 'lucide-react';
-import { collection, addDoc } from 'firebase/firestore';
+import { collection, addDoc, query, where, getDocs } from 'firebase/firestore';
 import { db, isFirebaseConfigured } from '../../lib/firebase';
+import { seedStudents } from '../../lib/seedData';
 import type { Student } from '../../types/database';
 import { useLanguage } from '../../context/LanguageContext';
 
@@ -33,7 +34,11 @@ export default function AddStudentModal({ isOpen, onClose, onStudentAdded }: Add
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!fullName.trim() || !studentId.trim() || !className.trim()) {
+    const cleanName = fullName.trim();
+    const cleanId = studentId.trim().toUpperCase();
+    const cleanClass = className.trim().toUpperCase();
+
+    if (!cleanName || !cleanId || !cleanClass) {
       setError(lang === 'he' ? 'נא למלא את כל שדות פרטי התלמיד (כולל כיתת אם).' : 'Please fill in all student information fields.');
       return;
     }
@@ -41,10 +46,33 @@ export default function AddStudentModal({ isOpen, onClose, onStudentAdded }: Add
     setIsSubmitting(true);
     setError(null);
 
+    // Duplicate ID check
+    if (isFirebaseConfigured && db) {
+      try {
+        const q = query(collection(db, 'students'), where('studentId', '==', cleanId));
+        const snap = await getDocs(q);
+        if (!snap.empty) {
+          const existing = snap.docs[0].data() as Student;
+          setError(t.duplicateStudentIdError(cleanId, existing.fullName));
+          setIsSubmitting(false);
+          return;
+        }
+      } catch (err: any) {
+        console.warn('Error checking duplicate student in Firestore:', err);
+      }
+    } else {
+      const existing = seedStudents.find((s) => s.studentId.toUpperCase() === cleanId);
+      if (existing) {
+        setError(t.duplicateStudentIdError(cleanId, existing.fullName));
+        setIsSubmitting(false);
+        return;
+      }
+    }
+
     const newStudent: Omit<Student, 'id'> = {
-      fullName: fullName.trim(),
-      studentId: studentId.trim().toUpperCase(),
-      className: className.trim().toUpperCase(),
+      fullName: cleanName,
+      studentId: cleanId,
+      className: cleanClass,
       grade: Number(grade) || 7,
       activeRentalsCount: 0,
     };
@@ -102,6 +130,7 @@ export default function AddStudentModal({ isOpen, onClose, onStudentAdded }: Add
           </button>
         </div>
 
+        {/* Form Body */}
         <form onSubmit={handleSubmit} className="p-4 sm:p-6 space-y-4 overflow-y-auto">
           {error && (
             <div className="p-3 bg-[#FEF2F2] border border-[#FECACA] text-[#991B1B] text-xs rounded-md">
@@ -118,7 +147,7 @@ export default function AddStudentModal({ isOpen, onClose, onStudentAdded }: Add
               required
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
-              placeholder={lang === 'he' ? 'למשל: עידו אביבי' : 'e.g. Eleanor Vance'}
+              placeholder={lang === 'he' ? 'שם פרטי ושם משפחה' : 'e.g. David Cohen'}
               className="w-full h-10 px-3.5 bg-white border border-[#E7E5E4] rounded-md text-base sm:text-sm text-[#1C1917] placeholder:text-[#78716C]/70 shadow-xs focus:outline-none focus:border-[#B45309] focus:ring-2 focus:ring-[#B45309]/15 transition-all"
             />
           </div>
@@ -132,12 +161,12 @@ export default function AddStudentModal({ isOpen, onClose, onStudentAdded }: Add
               required
               value={studentId}
               onChange={(e) => setStudentId(e.target.value)}
-              placeholder={lang === 'he' ? 'למשל: 221608623' : 'e.g. 2026-4091'}
+              placeholder="312456789"
               className="w-full h-10 px-3.5 bg-white border border-[#E7E5E4] rounded-md text-base sm:text-sm font-mono text-[#1C1917] placeholder:text-[#78716C]/70 shadow-xs focus:outline-none focus:border-[#B45309] focus:ring-2 focus:ring-[#B45309]/15 transition-all uppercase"
             />
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="block text-[11px] font-mono uppercase tracking-[0.06em] text-[#78716C] mb-1.5">
                 {t.classHomeroomLabel} <span className="text-[#991B1B]">*</span>
@@ -147,22 +176,23 @@ export default function AddStudentModal({ isOpen, onClose, onStudentAdded }: Add
                 required
                 value={className}
                 onChange={(e) => setClassName(e.target.value)}
-                placeholder={lang === 'he' ? 'למשל: ח-1, י-2' : 'e.g. 10-A, 11-Honors'}
+                placeholder={lang === 'he' ? 'למשל: י-1, ח-3' : 'e.g. 10-A, 8-B'}
                 className="w-full h-10 px-3.5 bg-white border border-[#E7E5E4] rounded-md text-base sm:text-sm font-mono text-[#1C1917] placeholder:text-[#78716C]/70 shadow-xs focus:outline-none focus:border-[#B45309] focus:ring-2 focus:ring-[#B45309]/15 transition-all uppercase"
               />
             </div>
+
             <div>
               <label className="block text-[11px] font-mono uppercase tracking-[0.06em] text-[#78716C] mb-1.5">
-                {t.studentGradeLabel}
+                {t.studentGradeLabel} <span className="text-[#991B1B]">*</span>
               </label>
               <select
                 value={grade}
                 onChange={(e) => setGrade(Number(e.target.value))}
-                className="w-full h-10 px-3 bg-white border border-[#E7E5E4] rounded-md text-base sm:text-sm text-[#1C1917] shadow-xs focus:outline-none focus:border-[#B45309] focus:ring-2 focus:ring-[#B45309]/15 transition-all"
+                className="w-full h-10 px-3 bg-white border border-[#E7E5E4] rounded-md text-base sm:text-sm font-mono text-[#1C1917] shadow-xs focus:outline-none focus:border-[#B45309] focus:ring-2 focus:ring-[#B45309]/15 transition-all"
               >
                 {GRADE_CHOICES.map((g) => (
                   <option key={g.value} value={g.value}>
-                    {lang === 'he' ? g.he : `Grade ${g.en}`}
+                    {lang === 'he' ? `שכבה ${g.he}` : `Grade ${g.en}`}
                   </option>
                 ))}
               </select>

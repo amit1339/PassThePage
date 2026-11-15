@@ -66,6 +66,8 @@ export interface Translations {
   returnedHistoryTitle: (count: number) => string;
   returnedDateLabel: string;
   noReturnedHistory: string;
+  backToListButton: string;
+  savedFilterLabel: (q: string) => string;
 
   // Class Accordion
   gradeAndClass: (grade: string, section?: string) => string;
@@ -138,7 +140,7 @@ export interface Translations {
   alreadyBorrowedWarning: string;
   noCopiesAvailableWarning: string;
 
-  // Modals - Import Students Excel
+  // Modals - Import & Export Students Excel
   importExcelButton: string;
   importExcelTitle: string;
   importExcelSub: string;
@@ -151,6 +153,11 @@ export interface Translations {
   invalidExcelFormat: string;
   selectExcelFilePrompt: string;
   sampleFileHint: string;
+  exportExcelButton: string;
+  exportingExcel: string;
+  exportSuccess: (count: number) => string;
+  duplicateStudentIdError: (id: string, name?: string) => string;
+  duplicateBookTitleError: (title: string) => string;
 
   // Footer & Alerts
   footerText: string;
@@ -222,6 +229,8 @@ export const translations: Record<Language, Translations> = {
     returnedHistoryTitle: (c) => `Returned Books History (${c})`,
     returnedDateLabel: 'Returned:',
     noReturnedHistory: 'No returned textbook history recorded for this student.',
+    backToListButton: 'Back to Student List',
+    savedFilterLabel: (q) => `Filter: "${q}"`,
 
     gradeAndClass: (grade, section) => (section ? `Grade ${grade} — Class ${section}` : `Grade ${grade}`),
     cohort: (cls) => `Cohort ${cls}`,
@@ -299,6 +308,13 @@ export const translations: Record<Language, Translations> = {
     invalidExcelFormat: 'Could not detect required columns (ID, Name, Grade, Class) in this Excel sheet.',
     selectExcelFilePrompt: 'Please select an Excel (.xlsx) file',
     sampleFileHint: 'Supports standard Ministry/School rosters with ת.ז, שם, כיתה, מקבילה',
+    exportExcelButton: 'Export to Excel',
+    exportingExcel: 'Exporting...',
+    exportSuccess: (c) => `Successfully exported ${c} loan records!`,
+    duplicateStudentIdError: (id, name) =>
+      `A student with ID ${id}${name ? ` (${name})` : ''} already exists. Cannot register duplicate.`,
+    duplicateBookTitleError: (title) =>
+      `A textbook titled "${title}" already exists in the catalog. Cannot create duplicate.`,
 
     footerText: 'PassThePage · Boutique Editorial Circulation System ·',
     firestoreLiveBadge: 'Cloud Firestore Live',
@@ -368,6 +384,8 @@ export const translations: Record<Language, Translations> = {
     returnedHistoryTitle: (c) => `היסטוריית ספרים שהוחזרו (${c})`,
     returnedDateLabel: 'תאריך החזרה:',
     noReturnedHistory: 'אין עדיין היסטוריית ספרים שהוחזרו לתלמיד זה.',
+    backToListButton: 'חזרה לרשימת התלמידים',
+    savedFilterLabel: (q) => `סינון נוכחי: "${q}"`,
 
     gradeAndClass: (grade, section) => (section ? `שכבה ${grade} — כיתה ${section}` : `שכבה ${grade}`),
     cohort: (cls) => `כיתה ${cls}`,
@@ -445,6 +463,13 @@ export const translations: Record<Language, Translations> = {
     invalidExcelFormat: 'לא נמצאו עמודות תלמידים מזוהות (ת.ז, שם פרטי/משפחה, כיתה, מקבילה). אנא בדוק את מבנה הקובץ.',
     selectExcelFilePrompt: 'אנא בחר קובץ אקסל (.xlsx)',
     sampleFileHint: 'תומך בפורמט קובץ בית-ספרי עם עמודות ת.ז, שם משפחה, שם פרטי, כיתה, מקבילה',
+    exportExcelButton: 'ייצוא לאקסל',
+    exportingExcel: 'מייצא לאקסל...',
+    exportSuccess: (c) => `ייצוא ${c} רשומות השאלה הושלם בהצלחה!`,
+    duplicateStudentIdError: (id, name) =>
+      `שגיאה: קיים כבר תלמיד עם ת.ז. ${id}${name ? ` (${name})` : ''}. לא ניתן להזין תלמיד כפול.`,
+    duplicateBookTitleError: (title) =>
+      `שגיאה: קיים כבר ספר בשם "${title}" בקטלוג. לא ניתן להזין ספר כפול.`,
 
     footerText: 'PassThePage · מערכת ניהול השאלת ספרי לימוד ·',
     firestoreLiveBadge: 'סנכרון ענן חי (Firestore)',

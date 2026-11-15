@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
 import { X, Edit3, Loader2, Trash2 } from 'lucide-react';
-import { doc, updateDoc } from 'firebase/firestore';
+import { doc, updateDoc, collection, getDocs } from 'firebase/firestore';
 import { db, isFirebaseConfigured } from '../../lib/firebase';
+import { seedBooks } from '../../lib/seedData';
 import type { Book } from '../../types/database';
 import { useLanguage } from '../../context/LanguageContext';
+import { SUBJECT_OPTIONS, getSubjectLabel } from '../../lib/subjectUtils';
 
 interface EditBookModalProps {
   isOpen: boolean;
@@ -13,18 +15,6 @@ interface EditBookModalProps {
   onDelete?: (bookId: string) => void;
 }
 
-const SUBJECT_OPTIONS = [
-  'Science',
-  'Mathematics',
-  'History',
-  'English',
-  'Geography',
-  'Literature',
-  'Computer Science',
-  'Languages',
-  'Arts',
-];
-
 export default function EditBookModal({
   isOpen,
   onClose,
@@ -33,8 +23,8 @@ export default function EditBookModal({
   onDelete,
 }: EditBookModalProps) {
   const [title, setTitle] = useState('');
-  const [subject, setSubject] = useState('Science');
-  const [gradeLevel, setGradeLevel] = useState('10th Grade');
+  const [subject, setSubject] = useState('תנ״ך');
+  const [gradeLevel, setGradeLevel] = useState('שכבה י');
   const [totalCopies, setTotalCopies] = useState<number>(30);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -43,7 +33,7 @@ export default function EditBookModal({
   useEffect(() => {
     if (book) {
       setTitle(book.title || '');
-      setSubject(book.subject || 'Science');
+      setSubject(book.subject || 'תנ״ך');
       setGradeLevel(book.gradeLevel || '10th Grade');
       setTotalCopies(book.totalCopies || 30);
       setError(null);
@@ -54,7 +44,8 @@ export default function EditBookModal({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!title.trim()) {
+    const cleanTitle = title.trim();
+    if (!cleanTitle) {
       setError(lang === 'he' ? 'נא להזין שם ספר.' : 'Please provide a Book Title.');
       return;
     }
@@ -62,12 +53,41 @@ export default function EditBookModal({
     setIsSubmitting(true);
     setError(null);
 
+    // Duplicate check if title was changed
+    const normalizedTitle = cleanTitle.toLowerCase();
+    if (normalizedTitle !== (book.title || '').trim().toLowerCase()) {
+      if (isFirebaseConfigured && db) {
+        try {
+          const booksSnap = await getDocs(collection(db, 'books'));
+          const duplicate = booksSnap.docs.find(
+            (d) => d.id !== book.id && (d.data().title || '').trim().toLowerCase() === normalizedTitle
+          );
+          if (duplicate) {
+            setError(t.duplicateBookTitleError(cleanTitle));
+            setIsSubmitting(false);
+            return;
+          }
+        } catch (err: any) {
+          console.warn('Error checking duplicate books in Firestore:', err);
+        }
+      } else {
+        const duplicate = seedBooks.find(
+          (b) => b.id !== book.id && b.title.trim().toLowerCase() === normalizedTitle
+        );
+        if (duplicate) {
+          setError(t.duplicateBookTitleError(cleanTitle));
+          setIsSubmitting(false);
+          return;
+        }
+      }
+    }
+
     const newTotalCopies = Math.max(1, Number(totalCopies) || 1);
     const currentlyRented = Math.max(0, (book.totalCopies || 0) - (book.availableCopies || 0));
     const newAvailableCopies = Math.max(0, newTotalCopies - currentlyRented);
 
     const updatedData: Partial<Book> = {
-      title: title.trim(),
+      title: cleanTitle,
       isbn: book.isbn || '',
       subject,
       gradeLevel: gradeLevel.trim() || 'General',
@@ -143,7 +163,6 @@ export default function EditBookModal({
             />
           </div>
 
-
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div>
               <label className="block text-[11px] font-mono uppercase tracking-[0.06em] text-[#78716C] mb-1.5">
@@ -154,9 +173,15 @@ export default function EditBookModal({
                 onChange={(e) => setSubject(e.target.value)}
                 className="w-full h-10 px-3 bg-white border border-[#E7E5E4] rounded-md text-base sm:text-sm text-[#1C1917] shadow-xs focus:outline-none focus:border-[#B45309] focus:ring-2 focus:ring-[#B45309]/15 transition-all"
               >
+                {/* If book has a custom or legacy English subject not in list, render it mapped */}
+                {!SUBJECT_OPTIONS.some((s) => s.value === subject) && (
+                  <option value={subject}>
+                    {getSubjectLabel(subject, lang)}
+                  </option>
+                )}
                 {SUBJECT_OPTIONS.map((sub) => (
-                  <option key={sub} value={sub}>
-                    {sub}
+                  <option key={sub.value} value={sub.value}>
+                    {lang === 'he' ? sub.he : sub.en}
                   </option>
                 ))}
               </select>

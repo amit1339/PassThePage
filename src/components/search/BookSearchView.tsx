@@ -6,22 +6,12 @@ import EditBookModal from '../forms/EditBookModal';
 import AssignStudentModal from '../forms/AssignStudentModal';
 import type { Book } from '../../types/database';
 import { useLanguage } from '../../context/LanguageContext';
-
-const SUBJECT_SPINE_COLORS: Record<string, string> = {
-  Science: 'bg-emerald-600',
-  Mathematics: 'bg-[#B45309]',
-  History: 'bg-stone-700',
-  English: 'bg-[#0F2342]',
-  Geography: 'bg-teal-600',
-  Literature: 'bg-[#9E2A2B]',
-  'Computer Science': 'bg-indigo-700',
-  Languages: 'bg-amber-700',
-  Arts: 'bg-purple-700',
-};
+import { getSubjectColor, getSubjectLabel } from '../../lib/subjectUtils';
 
 export default function BookSearchView() {
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedQuery, setDebouncedQuery] = useState('');
+  const [savedSearchQuery, setSavedSearchQuery] = useState('');
   const [classFilter, setClassFilter] = useState<string | null>(null);
   const [showDropdown, setShowDropdown] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -97,15 +87,23 @@ export default function BookSearchView() {
   }, [groupedRentals, classFilter]);
 
   const handleSelectBook = (book: Book) => {
+    setSavedSearchQuery(searchQuery);
     setSelectedBook(book);
     setSearchQuery(book.title);
     setShowDropdown(false);
     setClassFilter(null);
   };
 
+  const handleBackToList = () => {
+    setSelectedBook(null);
+    setSearchQuery(savedSearchQuery);
+    setClassFilter(null);
+  };
+
   const clearSelection = () => {
     setSelectedBook(null);
     setSearchQuery('');
+    setSavedSearchQuery('');
     setClassFilter(null);
     inputRef.current?.focus();
   };
@@ -169,7 +167,7 @@ export default function BookSearchView() {
                 <div className="flex items-center gap-3 min-w-0">
                   <div
                     className={`w-1.5 h-8 rounded-full ${
-                      SUBJECT_SPINE_COLORS[book.subject] || 'bg-[#B45309]'
+                      getSubjectColor(book.subject)
                     } shrink-0`}
                   />
                   <div className="min-w-0">
@@ -196,7 +194,7 @@ export default function BookSearchView() {
                     <span>{t.issueToStudentButton}</span>
                   </span>
                   <span className="text-[11px] font-mono px-2 py-0.5 rounded-md bg-[#FAF8F5] text-[#78716C] border border-[#E7E5E4]">
-                    {book.subject}
+                    {getSubjectLabel(book.subject, lang)}
                   </span>
                 </div>
               </button>
@@ -204,6 +202,30 @@ export default function BookSearchView() {
           </div>
         )}
       </div>
+
+      {/* Return to List Navigation Button */}
+      {selectedBook && (
+        <div className="flex items-center justify-between gap-3">
+          <button
+            type="button"
+            onClick={handleBackToList}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-[#1C1917] bg-white hover:bg-[#F3EFEA] border border-[#E7E5E4] rounded-md transition-colors cursor-pointer shadow-card min-h-[34px] sm:min-h-0"
+          >
+            {isRtl ? (
+              <ArrowRight className="w-3.5 h-3.5 stroke-[2]" />
+            ) : (
+              <ArrowLeft className="w-3.5 h-3.5 stroke-[2]" />
+            )}
+            <span>{lang === 'he' ? 'חזרה לרשימת הספרים' : 'Back to Book List'}</span>
+          </button>
+
+          {savedSearchQuery && (
+            <span className="text-[11px] font-mono text-[#78716C] bg-white px-2 py-1 rounded border border-[#E7E5E4]">
+              {t.savedFilterLabel(savedSearchQuery)}
+            </span>
+          )}
+        </div>
+      )}
 
       {/* Selected Book Header Card (Warm Paper Index Card Aesthetic) */}
       {selectedBook && (
@@ -215,7 +237,7 @@ export default function BookSearchView() {
               >
                 <div
                   className={`absolute start-0 top-0 bottom-0 w-1 ${
-                    SUBJECT_SPINE_COLORS[selectedBook.subject] || 'bg-[#B45309]'
+                    getSubjectColor(selectedBook.subject)
                   }`}
                 />
                 <BookOpen className="w-5 h-5 stroke-[1.5] text-[#1C1917]" />
@@ -227,7 +249,7 @@ export default function BookSearchView() {
               <div>
                 <div className="flex items-center gap-2 flex-wrap">
                   <span className="text-[11px] font-mono font-medium px-2 py-0.5 rounded-md bg-[#FAF8F5] text-[#B45309] border border-[#E7E5E4]">
-                    {selectedBook.subject}
+                    {getSubjectLabel(selectedBook.subject, lang)}
                   </span>
                   <span className="text-xs text-[#78716C] font-mono">
                     {selectedBook.gradeLevel}
@@ -380,7 +402,7 @@ export default function BookSearchView() {
           {/* Cards Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-3.5 max-h-[640px] overflow-y-auto pe-1">
             {books.map((book) => {
-              const spineColor = SUBJECT_SPINE_COLORS[book.subject] || 'bg-[#B45309]';
+              const spineColor = getSubjectColor(book.subject);
               return (
                 <button
                   key={book.id}
@@ -393,7 +415,7 @@ export default function BookSearchView() {
                       <div className="flex items-center gap-1.5">
                         <div className={`w-2 h-2 rounded-full ${spineColor}`} />
                         <span className="text-[11px] font-mono uppercase tracking-[0.04em] text-[#78716C]">
-                          {book.subject}
+                          {getSubjectLabel(book.subject, lang)}
                         </span>
                       </div>
                       <span className="text-[11px] font-mono text-[#78716C]">

@@ -13,20 +13,25 @@ import {
   CornerDownLeft,
   History,
   FileSpreadsheet,
+  Download,
+  Loader2,
 } from 'lucide-react';
 import { useStudentRentals } from '../../hooks/useStudentRentals';
 import StatusBadge from '../ui/StatusBadge';
 import AssignBookModal from './AssignBookModal';
 import ImportStudentsModal from '../forms/ImportStudentsModal';
+import { exportBorrowingsToExcel } from '../../lib/exportExcel';
 import { useLanguage } from '../../context/LanguageContext';
 import { formatGradeText } from '../../lib/gradeUtils';
 
 export default function StudentSearchView() {
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedQuery, setDebouncedQuery] = useState('');
+  const [savedSearchQuery, setSavedSearchQuery] = useState('');
   const [showDropdown, setShowDropdown] = useState(false);
   const [showAssignModal, setShowAssignModal] = useState(false);
   const [showImportModal, setShowImportModal] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
   const [returningId, setReturningId] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -69,15 +74,35 @@ export default function StudentSearchView() {
   }, []);
 
   const handleSelectStudent = (student: (typeof filteredStudents)[0]) => {
+    setSavedSearchQuery(searchQuery);
     setSelectedStudent(student);
     setSearchQuery(student.fullName);
     setShowDropdown(false);
   };
 
+  const handleBackToList = () => {
+    setSelectedStudent(null);
+    setSearchQuery(savedSearchQuery);
+  };
+
   const clearSelection = () => {
     setSelectedStudent(null);
     setSearchQuery('');
+    setSavedSearchQuery('');
     inputRef.current?.focus();
+  };
+
+  const handleExportExcel = async () => {
+    setIsExporting(true);
+    try {
+      const result = await exportBorrowingsToExcel();
+      alert(t.exportSuccess(result.count));
+    } catch (err: any) {
+      console.error('Export error:', err);
+      alert(lang === 'he' ? 'שגיאה בייצוא לאקסל: ' + (err?.message || err) : 'Error exporting to Excel: ' + (err?.message || err));
+    } finally {
+      setIsExporting(false);
+    }
   };
 
   const handleReturn = async (rentalId: string) => {
@@ -175,6 +200,30 @@ export default function StudentSearchView() {
           </div>
         )}
       </div>
+
+      {/* Return to List Navigation Button */}
+      {selectedStudent && (
+        <div className="flex items-center justify-between gap-3">
+          <button
+            type="button"
+            onClick={handleBackToList}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-[#1C1917] bg-white hover:bg-[#F3EFEA] border border-[#E7E5E4] rounded-md transition-colors cursor-pointer shadow-card min-h-[34px] sm:min-h-0"
+          >
+            {isRtl ? (
+              <ArrowRight className="w-3.5 h-3.5 stroke-[2]" />
+            ) : (
+              <ArrowLeft className="w-3.5 h-3.5 stroke-[2]" />
+            )}
+            <span>{t.backToListButton}</span>
+          </button>
+
+          {savedSearchQuery && (
+            <span className="text-[11px] font-mono text-[#78716C] bg-white px-2 py-1 rounded border border-[#E7E5E4]">
+              {t.savedFilterLabel(savedSearchQuery)}
+            </span>
+          )}
+        </div>
+      )}
 
       {/* Selected Student Dossier Card */}
       {selectedStudent && (
@@ -418,6 +467,19 @@ export default function StudentSearchView() {
               >
                 <FileSpreadsheet className="w-3.5 h-3.5 text-[#B45309] stroke-[1.5]" />
                 <span>{t.importExcelButton}</span>
+              </button>
+              <button
+                type="button"
+                onClick={handleExportExcel}
+                disabled={isExporting}
+                className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium text-[#065F46] bg-[#ECFDF5] hover:bg-[#A7F3D0]/60 border border-[#A7F3D0] rounded-md transition-colors cursor-pointer shadow-card min-h-[30px] disabled:opacity-50"
+              >
+                {isExporting ? (
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                ) : (
+                  <Download className="w-3.5 h-3.5 stroke-[1.5]" />
+                )}
+                <span>{isExporting ? t.exportingExcel : t.exportExcelButton}</span>
               </button>
             </div>
           </div>

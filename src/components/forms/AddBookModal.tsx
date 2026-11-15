@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import { X, BookPlus, Loader2 } from 'lucide-react';
-import { collection, addDoc } from 'firebase/firestore';
+import { collection, addDoc, getDocs } from 'firebase/firestore';
 import { db, isFirebaseConfigured } from '../../lib/firebase';
+import { seedBooks } from '../../lib/seedData';
 import type { Book } from '../../types/database';
 import { useLanguage } from '../../context/LanguageContext';
+import { SUBJECT_OPTIONS } from '../../lib/subjectUtils';
 
 interface AddBookModalProps {
   isOpen: boolean;
@@ -11,22 +13,10 @@ interface AddBookModalProps {
   onBookAdded?: (book: Book) => void;
 }
 
-const SUBJECT_OPTIONS = [
-  'Science',
-  'Mathematics',
-  'History',
-  'English',
-  'Geography',
-  'Literature',
-  'Computer Science',
-  'Languages',
-  'Arts',
-];
-
 export default function AddBookModal({ isOpen, onClose, onBookAdded }: AddBookModalProps) {
   const { t, lang } = useLanguage();
   const [title, setTitle] = useState('');
-  const [subject, setSubject] = useState('Science');
+  const [subject, setSubject] = useState('תנ״ך');
   const [gradeLevel, setGradeLevel] = useState(() => (lang === 'he' ? 'שכבה ח' : '8th Grade'));
   const [totalCopies, setTotalCopies] = useState<number>(30);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -36,7 +26,8 @@ export default function AddBookModal({ isOpen, onClose, onBookAdded }: AddBookMo
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!title.trim()) {
+    const cleanTitle = title.trim();
+    if (!cleanTitle) {
       setError(lang === 'he' ? 'נא להזין שם ספר.' : 'Please provide a Book Title.');
       return;
     }
@@ -44,9 +35,36 @@ export default function AddBookModal({ isOpen, onClose, onBookAdded }: AddBookMo
     setIsSubmitting(true);
     setError(null);
 
+    // Duplicate check by book title
+    const normalizedTitle = cleanTitle.toLowerCase();
+    if (isFirebaseConfigured && db) {
+      try {
+        const booksSnap = await getDocs(collection(db, 'books'));
+        const duplicate = booksSnap.docs.find(
+          (d) => (d.data().title || '').trim().toLowerCase() === normalizedTitle
+        );
+        if (duplicate) {
+          setError(t.duplicateBookTitleError(cleanTitle));
+          setIsSubmitting(false);
+          return;
+        }
+      } catch (err: any) {
+        console.warn('Error checking duplicate books in Firestore:', err);
+      }
+    } else {
+      const duplicate = seedBooks.find(
+        (b) => b.title.trim().toLowerCase() === normalizedTitle
+      );
+      if (duplicate) {
+        setError(t.duplicateBookTitleError(cleanTitle));
+        setIsSubmitting(false);
+        return;
+      }
+    }
+
     const copiesCount = Math.max(1, Number(totalCopies) || 1);
     const newBook: Omit<Book, 'id'> = {
-      title: title.trim(),
+      title: cleanTitle,
       isbn: '',
       subject,
       gradeLevel: gradeLevel.trim() || 'General',
@@ -123,7 +141,7 @@ export default function AddBookModal({ isOpen, onClose, onBookAdded }: AddBookMo
               required
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder={lang === 'he' ? 'למשל: פיזיקה לכיתה ח' : 'e.g. Campbell Biology 12th Edition'}
+              placeholder={lang === 'he' ? 'למשל: תנ״ך לבגרות, מתמטיקה לכיתה ח' : 'e.g. Campbell Biology 12th Edition'}
               className="w-full h-10 px-3.5 bg-white border border-[#E7E5E4] rounded-md text-base sm:text-sm text-[#1C1917] placeholder:text-[#78716C]/70 shadow-xs focus:outline-none focus:border-[#B45309] focus:ring-2 focus:ring-[#B45309]/15 transition-all"
             />
           </div>
@@ -139,8 +157,8 @@ export default function AddBookModal({ isOpen, onClose, onBookAdded }: AddBookMo
                 className="w-full h-10 px-3 bg-white border border-[#E7E5E4] rounded-md text-base sm:text-sm text-[#1C1917] shadow-xs focus:outline-none focus:border-[#B45309] focus:ring-2 focus:ring-[#B45309]/15 transition-all"
               >
                 {SUBJECT_OPTIONS.map((sub) => (
-                  <option key={sub} value={sub}>
-                    {sub}
+                  <option key={sub.value} value={sub.value}>
+                    {lang === 'he' ? sub.he : sub.en}
                   </option>
                 ))}
               </select>
