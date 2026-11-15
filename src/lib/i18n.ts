@@ -127,6 +127,17 @@ export interface Translations {
   noEligibleBooksFound: (grade: number) => string;
   noBooksInCatalog: string;
 
+  // Modals - Issue to Student (from Book view)
+  issueToStudentButton: string;
+  issueToStudentTitle: string;
+  issueToStudentSub: (title: string) => string;
+  selectStudentLabel: string;
+  noStudentsMatchFilter: string;
+  filterBookGradeOnly: (grade: string) => string;
+  noEligibleStudentsFound: string;
+  alreadyBorrowedWarning: string;
+  noCopiesAvailableWarning: string;
+
   // Modals - Import Students Excel
   importExcelButton: string;
   importExcelTitle: string;
@@ -266,6 +277,16 @@ export const translations: Record<Language, Translations> = {
     noEligibleBooksFound: (g) => `No books designated for Grade ${g}. Click "Showing All" to browse.`,
     noBooksInCatalog: 'No books found.',
 
+    issueToStudentButton: 'Issue to Student',
+    issueToStudentTitle: 'Issue Book to Student',
+    issueToStudentSub: (title) => `Assigning copy of "${title}" to student`,
+    selectStudentLabel: 'Select Student from Roster',
+    noStudentsMatchFilter: 'No students match your search.',
+    filterBookGradeOnly: (grade) => `Grade ${grade} Only`,
+    noEligibleStudentsFound: 'No eligible students found in this grade.',
+    alreadyBorrowedWarning: 'This student currently holds an active copy of this textbook.',
+    noCopiesAvailableWarning: '0 copies in storage according to inventory record.',
+
     importExcelButton: 'Import Excel',
     importExcelTitle: 'Import Students from Excel',
     importExcelSub: 'Bulk upload class rosters via .xlsx spreadsheet',
@@ -401,6 +422,16 @@ export const translations: Record<Language, Translations> = {
     issuingButton: 'מבצע השאלה...',
     noEligibleBooksFound: (g) => `לא נמצאו ספרים המיועדים לשכבה ${formatGradeLetter(g)}. לחץ "הצגת כל השכבות" לעיון.`,
     noBooksInCatalog: 'לא נמצאו ספרים בקטלוג.',
+
+    issueToStudentButton: 'השאלה לתלמיד',
+    issueToStudentTitle: 'השאלת ספר לתלמיד',
+    issueToStudentSub: (title) => `השאלת עותק של "${title}" לתלמיד/ה`,
+    selectStudentLabel: 'בחירת תלמיד/ה מרשימת בית הספר',
+    noStudentsMatchFilter: 'לא נמצאו תלמידים התואמים לחיפוש.',
+    filterBookGradeOnly: (grade) => `תלמידי שכבה ${grade} בלבד`,
+    noEligibleStudentsFound: 'לא נמצאו תלמידים מתאימים לשכבה זו.',
+    alreadyBorrowedWarning: 'לתלמיד זה כבר יש עותק פעיל של ספר זה.',
+    noCopiesAvailableWarning: 'על פי הרישום, אין כרגע עותקים פנויים במלאי.',
 
     importExcelButton: 'ייבוא מאקסל',
     importExcelTitle: 'ייבוא תלמידים מקובץ אקסל',

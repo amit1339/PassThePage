@@ -1,11 +1,23 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import { collection, query, where, onSnapshot, doc, updateDoc, deleteDoc, Timestamp } from 'firebase/firestore';
+import {
+  collection,
+  query,
+  where,
+  onSnapshot,
+  doc,
+  updateDoc,
+  deleteDoc,
+  addDoc,
+  Timestamp,
+} from 'firebase/firestore';
 import { db, isFirebaseConfigured } from '../lib/firebase';
-import { seedBooks, seedRentals } from '../lib/seedData';
-import type { Book, Rental } from '../types/database';
+import { seedBooks, seedRentals, seedStudents } from '../lib/seedData';
+import { isGradeEligible } from '../lib/gradeUtils';
+import type { Book, Rental, Student } from '../types/database';
 
 export function useBookRentals(searchQuery: string) {
   const [books, setBooks] = useState<Book[]>([]);
+  const [students, setStudents] = useState<Student[]>([]);
   const [rentals, setRentals] = useState<Rental[]>([]);
   const [selectedBook, setSelectedBook] = useState<Book | null>(null);
   const [loading, setLoading] = useState(true);
@@ -33,6 +45,26 @@ export function useBookRentals(searchQuery: string) {
     return unsub;
   }, []);
 
+  // Load students for assignment modal
+  useEffect(() => {
+    if (!isFirebaseConfigured || !db) {
+      setStudents(seedStudents);
+      return;
+    }
+
+    const unsub = onSnapshot(
+      collection(db, 'students'),
+      (snap) => {
+        const data = snap.docs.map((d) => ({ id: d.id, ...d.data() } as Student));
+        setStudents(data);
+      },
+      (err) => {
+        console.error('Error listening to students in useBookRentals:', err);
+      }
+    );
+    return unsub;
+  }, []);
+
   // Keep selectedBook updated if Firestore document changes
   useEffect(() => {
     if (selectedBook) {
@@ -42,6 +74,7 @@ export function useBookRentals(searchQuery: string) {
         (latest.title !== selectedBook.title ||
           latest.isbn !== selectedBook.isbn ||
           latest.totalCopies !== selectedBook.totalCopies ||
+          latest.availableCopies !== selectedBook.availableCopies ||
           latest.subject !== selectedBook.subject ||
           latest.gradeLevel !== selectedBook.gradeLevel)
       ) {
@@ -111,17 +144,137 @@ export function useBookRentals(searchQuery: string) {
     return sorted;
   }, [rentals]);
 
+  // Assign this selected book to a student
+  const assignStudent = useCallback(
+    async (student: Student, copyBarcode: string, issueDate?: string | Date) => {
+      if (!selectedBook) return;
+
+      const check = isGradeEligible(student.grade, selectedBook.gradeLevel);
+      if (!check.eligible) {
+        throw new Error(check.reason || `Grade ${student.grade} students cannot borrow Grade ${check.bookGrade} textbooks.`);
+      }
+
+      let rentTimestamp: Timestamp;
+      if (issueDate) {
+        if (issueDate instanceof Date) {
+          rentTimestamp = Timestamp.fromDate(issueDate);
+        } else {
+          const parsed = new Date(issueDate.includes('T') ? issueDate : `${issueDate}T12:00:00`);
+          rentTimestamp = isNaN(parsed.getTime()) ? Timestamp.now() : Timestamp.fromDate(parsed);
+        }
+      } else {
+        rentTimestamp = Timestamp.now();
+      }
+
+      const rentDateObj = rentTimestamp.toDate();
+      const dueDateObj = new Date(rentDateObj.getTime() + 90 * 24 * 60 * 60 * 1000);
+
+      const newRental: Omit<Rental, 'id'> = {
+        bookId: selectedBook.id,
+        bookTitle: selectedBook.title,
+        bookIsbn: selectedBook.isbn || '',
+        copyBarcode,
+        studentDocId: student.id,
+        studentSchoolId: student.studentId,
+        studentName: student.fullName,
+        className: student.className,
+        rentedAt: rentTimestamp,
+        dueDate: Timestamp.fromDate(dueDateObj),
+        returnedAt: null,
+        status: 'active',
+      };
+
+      if (!isFirebaseConfigured || !db) {
+        const fakeId = 'rent-new-' + Date.now();
+        setRentals((prev) => [...prev, { id: fakeId, ...newRental }]);
+        setSelectedBook((prev) =>
+          prev
+            ? { ...prev, availableCopies: Math.max(0, (prev.availableCopies ?? prev.totalCopies) - 1) }
+            : null
+        );
+        setBooks((prev) =>
+          prev.map((b) =>
+            b.id === selectedBook.id
+              ? { ...b, availableCopies: Math.max(0, (b.availableCopies ?? b.totalCopies) - 1) }
+              : b
+          )
+        );
+        return;
+      }
+
+      await addDoc(collection(db, 'rentals'), newRental);
+
+      try {
+        await updateDoc(doc(db, 'students', student.id), {
+          activeRentalsCount: (student.activeRentalsCount || 0) + 1,
+        });
+        if (typeof selectedBook.availableCopies === 'number') {
+          await updateDoc(doc(db, 'books', selectedBook.id), {
+            availableCopies: Math.max(0, selectedBook.availableCopies - 1),
+          });
+        }
+      } catch (e) {
+        console.warn('Could not update counts on assignStudent:', e);
+      }
+    },
+    [selectedBook]
+  );
+
   // Mark a rental as returned
-  const markReturned = useCallback(async (rentalId: string) => {
-    if (!isFirebaseConfigured || !db) {
-      setRentals((prev) => prev.filter((r) => r.id !== rentalId));
-      return;
-    }
-    await updateDoc(doc(db, 'rentals', rentalId), {
-      status: 'returned',
-      returnedAt: Timestamp.now(),
-    });
-  }, []);
+  const markReturned = useCallback(
+    async (rentalId: string) => {
+      const targetRental = rentals.find((r) => r.id === rentalId);
+
+      if (!isFirebaseConfigured || !db) {
+        setRentals((prev) => prev.filter((r) => r.id !== rentalId));
+        if (selectedBook) {
+          setSelectedBook((prev) =>
+            prev
+              ? { ...prev, availableCopies: Math.min(prev.totalCopies, (prev.availableCopies ?? 0) + 1) }
+              : null
+          );
+          setBooks((prev) =>
+            prev.map((b) =>
+              b.id === selectedBook.id
+                ? { ...b, availableCopies: Math.min(b.totalCopies, (b.availableCopies ?? 0) + 1) }
+                : b
+            )
+          );
+        }
+        return;
+      }
+
+      await updateDoc(doc(db, 'rentals', rentalId), {
+        status: 'returned',
+        returnedAt: Timestamp.now(),
+      });
+
+      if (selectedBook && typeof selectedBook.availableCopies === 'number') {
+        try {
+          await updateDoc(doc(db, 'books', selectedBook.id), {
+            availableCopies: Math.min(selectedBook.totalCopies, selectedBook.availableCopies + 1),
+          });
+        } catch (e) {
+          console.warn('Could not increment available copies on return:', e);
+        }
+      }
+
+      if (targetRental?.studentDocId) {
+        try {
+          const studentDocRef = doc(db, 'students', targetRental.studentDocId);
+          const studentDoc = students.find((s) => s.id === targetRental.studentDocId);
+          if (studentDoc) {
+            await updateDoc(studentDocRef, {
+              activeRentalsCount: Math.max(0, (studentDoc.activeRentalsCount || 1) - 1),
+            });
+          }
+        } catch (e) {
+          console.warn('Could not decrement student count on return:', e);
+        }
+      }
+    },
+    [rentals, selectedBook, students]
+  );
 
   // Delete a book from catalog
   const deleteBook = useCallback(
@@ -139,6 +292,7 @@ export function useBookRentals(searchQuery: string) {
 
   return {
     books,
+    students,
     filteredBooks,
     selectedBook,
     setSelectedBook,
@@ -146,6 +300,7 @@ export function useBookRentals(searchQuery: string) {
     groupedRentals,
     loading,
     markReturned,
+    assignStudent,
     deleteBook,
   };
 }

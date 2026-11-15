@@ -1,8 +1,9 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
-import { Search, BookOpen, X, Filter, Edit3, Trash2, ArrowRight, ArrowLeft, CornerDownLeft } from 'lucide-react';
+import { Search, BookOpen, X, Filter, Edit3, Trash2, ArrowRight, ArrowLeft, CornerDownLeft, UserPlus } from 'lucide-react';
 import { useBookRentals } from '../../hooks/useBookRentals';
 import ClassGroupAccordion from './ClassGroupAccordion';
 import EditBookModal from '../forms/EditBookModal';
+import AssignStudentModal from '../forms/AssignStudentModal';
 import type { Book } from '../../types/database';
 import { useLanguage } from '../../context/LanguageContext';
 
@@ -24,12 +25,14 @@ export default function BookSearchView() {
   const [classFilter, setClassFilter] = useState<string | null>(null);
   const [showDropdown, setShowDropdown] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const { t, isRtl, lang } = useLanguage();
 
   const {
     books,
+    students,
     filteredBooks,
     selectedBook,
     setSelectedBook,
@@ -37,6 +40,7 @@ export default function BookSearchView() {
     rentals,
     loading,
     markReturned,
+    assignStudent,
     deleteBook,
   } = useBookRentals(debouncedQuery);
 
@@ -180,6 +184,17 @@ export default function BookSearchView() {
                 </div>
 
                 <div className="flex items-center gap-2 shrink-0">
+                  <span
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleSelectBook(book);
+                      setIsAssignModalOpen(true);
+                    }}
+                    className="hidden sm:inline-flex items-center gap-1 text-[11px] font-medium text-[#1C1917] hover:text-[#B45309] bg-white hover:bg-[#F3EFEA] border border-[#E7E5E4] px-2 py-1 rounded shadow-xs transition-colors cursor-pointer"
+                  >
+                    <UserPlus className="w-3 h-3 stroke-[1.5]" />
+                    <span>{t.issueToStudentButton}</span>
+                  </span>
                   <span className="text-[11px] font-mono px-2 py-0.5 rounded-md bg-[#FAF8F5] text-[#78716C] border border-[#E7E5E4]">
                     {book.subject}
                   </span>
@@ -250,9 +265,9 @@ export default function BookSearchView() {
               </div>
             </div>
 
-            {/* Circulation Metrics */}
-            <div className="flex flex-row md:flex-col items-center md:items-end justify-between border-t md:border-t-0 pt-3.5 md:pt-0 border-[#E7E5E4] shrink-0">
-              <div className="text-start md:text-end">
+            {/* Circulation Metrics & Issue Action */}
+            <div className="flex flex-col md:items-end justify-between border-t md:border-t-0 pt-3.5 md:pt-0 border-[#E7E5E4] shrink-0 gap-3">
+              <div className="flex items-center md:block justify-between text-start md:text-end w-full">
                 <div className="text-xl sm:text-2xl font-mono font-semibold text-[#1C1917] leading-none">
                   {rentals.length}
                   <span className="text-[#78716C] text-sm font-normal">
@@ -265,11 +280,20 @@ export default function BookSearchView() {
                 </p>
               </div>
 
-              <div className="text-end">
+              <div className="flex items-center gap-2 w-full md:w-auto justify-between md:justify-end">
                 <span className="text-[11px] font-mono text-[#065F46] bg-[#ECFDF5] px-2 py-0.5 rounded-md border border-[#A7F3D0]">
                   {t.availableInStorage(Math.max(0, selectedBook.totalCopies - rentals.length))}
                 </span>
               </div>
+
+              <button
+                type="button"
+                onClick={() => setIsAssignModalOpen(true)}
+                className="w-full md:w-auto flex items-center justify-center gap-1.5 px-3.5 py-2 sm:py-1.5 text-xs font-medium text-[#FAF8F5] bg-[#1C1917] hover:bg-[#292524] border border-[#1C1917] rounded-md transition-all duration-150 cursor-pointer shadow-card min-h-[38px] sm:min-h-0"
+              >
+                <UserPlus className="w-3.5 h-3.5 stroke-[1.5]" />
+                <span>{t.issueToStudentButton}</span>
+              </button>
             </div>
           </div>
         </div>
@@ -392,14 +416,28 @@ export default function BookSearchView() {
                     <span className="font-mono text-[11px] text-[#065F46] bg-[#ECFDF5] px-1.5 py-0.2 rounded border border-[#A7F3D0]">
                       {book.availableCopies} {t.availShort}
                     </span>
-                    <span className="inline-flex items-center gap-1 text-[11px] font-medium text-[#1C1917]">
-                      {t.viewRoster}
-                      {isRtl ? (
-                        <ArrowLeft className="w-3 h-3 stroke-[2] group-hover:-translate-x-0.5 transition-transform" />
-                      ) : (
-                        <ArrowRight className="w-3 h-3 stroke-[2] group-hover:translate-x-0.5 transition-transform" />
-                      )}
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <span
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleSelectBook(book);
+                          setIsAssignModalOpen(true);
+                        }}
+                        className="inline-flex items-center gap-1 text-[11px] font-medium text-[#1C1917] hover:text-[#B45309] bg-white hover:bg-[#F3EFEA] border border-[#E7E5E4] px-2 py-0.5 rounded shadow-xs transition-colors cursor-pointer"
+                        title={t.issueToStudentButton}
+                      >
+                        <UserPlus className="w-3 h-3 stroke-[1.5]" />
+                        <span>{t.issueToStudentButton}</span>
+                      </span>
+                      <span className="inline-flex items-center gap-1 text-[11px] font-medium text-[#1C1917]">
+                        {t.viewRoster}
+                        {isRtl ? (
+                          <ArrowLeft className="w-3 h-3 stroke-[2] group-hover:-translate-x-0.5 transition-transform" />
+                        ) : (
+                          <ArrowRight className="w-3 h-3 stroke-[2] group-hover:translate-x-0.5 transition-transform" />
+                        )}
+                      </span>
+                    </div>
                   </div>
                 </button>
               );
@@ -447,6 +485,18 @@ export default function BookSearchView() {
           if (b) handleDeleteBook(b);
         }}
       />
+
+      {/* Assign Book to Student Modal */}
+      {selectedBook && (
+        <AssignStudentModal
+          isOpen={isAssignModalOpen}
+          onClose={() => setIsAssignModalOpen(false)}
+          book={selectedBook}
+          students={students}
+          existingBookRentals={rentals}
+          onAssign={assignStudent}
+        />
+      )}
     </div>
   );
 }
