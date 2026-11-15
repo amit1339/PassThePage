@@ -6,6 +6,7 @@ import {
   onSnapshot,
   doc,
   updateDoc,
+  deleteDoc,
   addDoc,
   Timestamp,
 } from 'firebase/firestore';
@@ -238,6 +239,44 @@ export function useStudentRentals(searchQuery: string) {
     [rentals]
   );
 
+  // Update student details
+  const updateStudent = useCallback(
+    async (studentDocId: string, updatedData: Partial<Student>) => {
+      if (!isFirebaseConfigured || !db) {
+        setStudents((prev) =>
+          prev.map((s) => (s.id === studentDocId ? { ...s, ...updatedData } : s))
+        );
+        if (selectedStudent?.id === studentDocId) {
+          setSelectedStudent((prev) => (prev ? { ...prev, ...updatedData } : null));
+        }
+        return;
+      }
+      await updateDoc(doc(db, 'students', studentDocId), updatedData);
+      if (selectedStudent?.id === studentDocId) {
+        setSelectedStudent((prev) => (prev ? { ...prev, ...updatedData } : null));
+      }
+    },
+    [selectedStudent]
+  );
+
+  // Delete student from directory
+  const deleteStudent = useCallback(
+    async (studentDocId: string) => {
+      if (!isFirebaseConfigured || !db) {
+        setStudents((prev) => prev.filter((s) => s.id !== studentDocId));
+        if (selectedStudent?.id === studentDocId) {
+          setSelectedStudent(null);
+        }
+        return;
+      }
+      await deleteDoc(doc(db, 'students', studentDocId));
+      if (selectedStudent?.id === studentDocId) {
+        setSelectedStudent(null);
+      }
+    },
+    [selectedStudent]
+  );
+
   return {
     students,
     filteredStudents,
@@ -250,6 +289,8 @@ export function useStudentRentals(searchQuery: string) {
     loading,
     returnBook,
     assignBook,
+    updateStudent,
+    deleteStudent,
     books: allBooks,
   };
 }

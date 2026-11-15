@@ -113,6 +113,13 @@ export interface Translations {
   registeringButton: string;
   confirmEnrollStudent: string;
 
+  // Modals - Edit Student
+  editStudentTitle: string;
+  editStudentSub: (name: string) => string;
+  editStudentButton: string;
+  deleteStudentButton: string;
+  confirmDeleteStudent: (name: string, loans: number) => string;
+
   // Modals - Issue Textbook
   issueRentalTitle: string;
   issueRentalSub: (name: string) => string;
@@ -271,6 +278,15 @@ export const translations: Record<Language, Translations> = {
     registeringButton: 'Registering...',
     confirmEnrollStudent: 'Enroll Student',
 
+    editStudentTitle: 'Update Student Profile',
+    editStudentSub: (name) => `Edit credentials and enrollment for ${name}`,
+    editStudentButton: 'Edit Details',
+    deleteStudentButton: 'Delete Student',
+    confirmDeleteStudent: (name, loans) =>
+      loans > 0
+        ? `Warning: "${name}" currently holds ${loans} active borrowed books! Are you sure you want to delete this student?`
+        : `Are you sure you want to delete "${name}" from the student directory?`,
+
     issueRentalTitle: 'Issue Textbook Rental',
     issueRentalSub: (name) => `Assigning custody to ${name}`,
     selectBookLabel: 'Select Book Title',
@@ -425,6 +441,15 @@ export const translations: Record<Language, Translations> = {
     studentGradeLabel: 'שכבת גיל',
     registeringButton: 'רושם...',
     confirmEnrollStudent: 'רישום תלמיד',
+
+    editStudentTitle: 'עדכון פרטי תלמיד',
+    editStudentSub: (name) => `עריכת פרטי רישום וכיתה עבור ${name}`,
+    editStudentButton: 'עריכת פרטים',
+    deleteStudentButton: 'מחיקת תלמיד',
+    confirmDeleteStudent: (name, loans) =>
+      loans > 0
+        ? `שים לב: לתלמיד/ה "${name}" ישנם ${loans} ספרים בהשאלה פעילה! האם אתה בטוח שברצונך למחוק תלמיד זה מהמערכת?`
+        : `האם אתה בטוח שברצונך למחוק את "${name}" מרשימת התלמידים?`,
 
     issueRentalTitle: 'השאלת ספר לימוד',
     issueRentalSub: (name) => `השאלה לתלמיד/ה: ${name}`,

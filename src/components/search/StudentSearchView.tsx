@@ -15,11 +15,14 @@ import {
   FileSpreadsheet,
   Download,
   Loader2,
+  Edit3,
+  Trash2,
 } from 'lucide-react';
 import { useStudentRentals } from '../../hooks/useStudentRentals';
 import StatusBadge from '../ui/StatusBadge';
 import AssignBookModal from './AssignBookModal';
 import ImportStudentsModal from '../forms/ImportStudentsModal';
+import EditStudentModal from '../forms/EditStudentModal';
 import { exportBorrowingsToExcel } from '../../lib/exportExcel';
 import { useLanguage } from '../../context/LanguageContext';
 import { formatGradeText } from '../../lib/gradeUtils';
@@ -31,6 +34,7 @@ export default function StudentSearchView() {
   const [showDropdown, setShowDropdown] = useState(false);
   const [showAssignModal, setShowAssignModal] = useState(false);
   const [showImportModal, setShowImportModal] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const [returningId, setReturningId] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -48,8 +52,25 @@ export default function StudentSearchView() {
     loading,
     returnBook,
     assignBook,
+    updateStudent,
+    deleteStudent,
     books,
   } = useStudentRentals(debouncedQuery);
+
+  const handleDeleteStudent = async (student: (typeof filteredStudents)[0]) => {
+    const activeLoans = rentals.filter((r) => r.status === 'active').length;
+    if (window.confirm(t.confirmDeleteStudent(student.fullName, activeLoans))) {
+      try {
+        await deleteStudent(student.id);
+        if (selectedStudent?.id === student.id) {
+          setSelectedStudent(null);
+        }
+      } catch (err: any) {
+        console.error('Delete student error:', err);
+        alert(lang === 'he' ? 'שגיאה במחיקת התלמיד: ' + (err?.message || err) : 'Error deleting student: ' + (err?.message || err));
+      }
+    }
+  };
 
   // Debounce search (150ms)
   useEffect(() => {
@@ -259,6 +280,22 @@ export default function StudentSearchView() {
                   <span className="text-xs font-mono text-[#78716C] bg-[#FAF8F5] px-2 py-0.5 rounded border border-[#E7E5E4]">
                     {t.cohort(selectedStudent.className)}
                   </span>
+                  <button
+                    type="button"
+                    onClick={() => setIsEditModalOpen(true)}
+                    className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium text-[#1C1917] bg-white hover:bg-[#F3EFEA] border border-[#E7E5E4] rounded-md transition-colors cursor-pointer shadow-card min-h-[32px] sm:min-h-0"
+                  >
+                    <Edit3 className="w-3.5 h-3.5 stroke-[1.5] text-[#78716C]" />
+                    <span>{t.editStudentButton}</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleDeleteStudent(selectedStudent)}
+                    className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium text-[#991B1B] bg-white hover:bg-[#FEF2F2] border border-[#FECACA] rounded-md transition-colors cursor-pointer shadow-card min-h-[32px] sm:min-h-0"
+                  >
+                    <Trash2 className="w-3.5 h-3.5 stroke-[1.5] text-[#991B1B]" />
+                    <span>{t.deleteStudentButton}</span>
+                  </button>
                 </div>
               </div>
             </div>
@@ -580,6 +617,21 @@ export default function StudentSearchView() {
           if (imported.length > 0) {
             setSelectedStudent(imported[0]);
           }
+        }}
+      />
+
+      {/* Edit Student Profile Modal */}
+      <EditStudentModal
+        isOpen={isEditModalOpen}
+        onClose={() => setIsEditModalOpen(false)}
+        student={selectedStudent}
+        onStudentUpdated={async (updated) => {
+          await updateStudent(updated.id, updated);
+          setSelectedStudent(updated);
+        }}
+        onDelete={(studentId) => {
+          const s = students.find((x) => x.id === studentId) || selectedStudent;
+          if (s) handleDeleteStudent(s);
         }}
       />
     </div>
