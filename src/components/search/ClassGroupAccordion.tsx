@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ChevronDown, ChevronRight, ChevronLeft, CheckCircle2, Barcode, Calendar } from 'lucide-react';
+import { ChevronDown, ChevronRight, ChevronLeft, CheckCircle2, Barcode, Calendar, Trash2 } from 'lucide-react';
 import type { Rental } from '../../types/database';
 import { useLanguage } from '../../context/LanguageContext';
 
@@ -7,15 +7,18 @@ interface ClassGroupAccordionProps {
   className: string;
   rentals: Rental[];
   onMarkReturned: (rentalId: string) => void;
+  onDeleteRental?: (rentalId: string) => Promise<void> | void;
 }
 
 export default function ClassGroupAccordion({
   className: cls,
   rentals,
   onMarkReturned,
+  onDeleteRental,
 }: ClassGroupAccordionProps) {
   const [open, setOpen] = useState(true);
   const [returningId, setReturningId] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
   const { t, lang, isRtl } = useLanguage();
 
   const handleReturn = async (rentalId: string) => {
@@ -24,6 +27,18 @@ export default function ClassGroupAccordion({
       await onMarkReturned(rentalId);
     } finally {
       setReturningId(null);
+    }
+  };
+
+  const handleDelete = async (rentalId: string) => {
+    if (!onDeleteRental) return;
+    if (window.confirm(t.confirmDeleteRental)) {
+      setDeletingId(rentalId);
+      try {
+        await onDeleteRental(rentalId);
+      } finally {
+        setDeletingId(null);
+      }
     }
   };
 
@@ -112,16 +127,29 @@ export default function ClassGroupAccordion({
                   </div>
                 </div>
 
-                {/* Return Action */}
-                <div className="flex items-center justify-end shrink-0 w-full sm:w-auto">
+                {/* Actions: Return & Delete */}
+                <div className="flex items-center gap-2 justify-end shrink-0 w-full sm:w-auto">
                   <button
                     onClick={() => handleReturn(r.id)}
-                    disabled={returningId === r.id}
+                    disabled={returningId === r.id || deletingId === r.id}
                     className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-3 py-2 sm:py-1 text-xs font-medium text-[#065F46] bg-[#ECFDF5] hover:bg-[#A7F3D0]/60 border border-[#A7F3D0] rounded-md transition-colors cursor-pointer disabled:opacity-50 min-h-[36px] sm:min-h-0"
                   >
                     <CheckCircle2 className="w-3.5 h-3.5 stroke-[1.5]" />
                     <span>{returningId === r.id ? t.returningLabel : t.markReturnedButton}</span>
                   </button>
+                  {onDeleteRental && (
+                    <button
+                      type="button"
+                      onClick={() => handleDelete(r.id)}
+                      disabled={deletingId === r.id || returningId === r.id}
+                      title={t.deleteRentalButton}
+                      aria-label={t.deleteRentalButton}
+                      className="inline-flex items-center justify-center gap-1.5 px-2.5 py-2 sm:py-1 text-xs font-medium text-[#991B1B] bg-white hover:bg-[#FEF2F2] border border-[#FECACA] rounded-md transition-colors cursor-pointer disabled:opacity-50 min-h-[36px] sm:min-h-0 shadow-xs"
+                    >
+                      <Trash2 className="w-3.5 h-3.5 stroke-[1.5]" />
+                      <span className="sm:hidden">{t.deleteRentalButton}</span>
+                    </button>
+                  )}
                 </div>
               </div>
             );

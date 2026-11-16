@@ -31,6 +31,7 @@ export default function BookSearchView() {
     loading,
     markReturned,
     assignStudent,
+    deleteRental,
     deleteBook,
   } = useBookRentals(debouncedQuery);
 
@@ -365,6 +366,7 @@ export default function BookSearchView() {
               className={cls}
               rentals={classRentals}
               onMarkReturned={markReturned}
+              onDeleteRental={deleteRental}
             />
           ))}
 

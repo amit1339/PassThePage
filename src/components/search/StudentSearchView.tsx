@@ -37,6 +37,7 @@ export default function StudentSearchView() {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const [returningId, setReturningId] = useState<string | null>(null);
+  const [deletingRentalId, setDeletingRentalId] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const { t, isRtl, lang } = useLanguage();
@@ -52,6 +53,7 @@ export default function StudentSearchView() {
     loading,
     returnBook,
     assignBook,
+    deleteRental,
     updateStudent,
     deleteStudent,
     books,
@@ -68,6 +70,20 @@ export default function StudentSearchView() {
       } catch (err: any) {
         console.error('Delete student error:', err);
         alert(lang === 'he' ? 'שגיאה במחיקת התלמיד: ' + (err?.message || err) : 'Error deleting student: ' + (err?.message || err));
+      }
+    }
+  };
+
+  const handleDeleteRental = async (rentalId: string) => {
+    if (window.confirm(t.confirmDeleteRental)) {
+      setDeletingRentalId(rentalId);
+      try {
+        await deleteRental(rentalId);
+      } catch (err: any) {
+        console.error('Delete rental error:', err);
+        alert(lang === 'he' ? 'שגיאה במחיקת ההשאלה: ' + (err?.message || err) : 'Error deleting borrowing: ' + (err?.message || err));
+      } finally {
+        setDeletingRentalId(null);
       }
     }
   };
@@ -378,14 +394,25 @@ export default function StudentSearchView() {
                 </div>
               </div>
 
-              <div className="flex items-center justify-end shrink-0 w-full sm:w-auto">
+              <div className="flex items-center gap-2 justify-end shrink-0 w-full sm:w-auto">
                 <button
                   onClick={() => handleReturn(r.id)}
-                  disabled={returningId === r.id}
+                  disabled={returningId === r.id || deletingRentalId === r.id}
                   className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-3 py-2 sm:py-1 text-xs font-medium text-[#065F46] bg-[#ECFDF5] hover:bg-[#A7F3D0]/60 border border-[#A7F3D0] rounded-md transition-colors cursor-pointer disabled:opacity-50 min-h-[36px] sm:min-h-0"
                 >
                   <CheckCircle2 className="w-3.5 h-3.5 stroke-[1.5]" />
                   <span>{returningId === r.id ? t.returningBook : t.returnBook}</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleDeleteRental(r.id)}
+                  disabled={deletingRentalId === r.id || returningId === r.id}
+                  title={t.deleteRentalButton}
+                  aria-label={t.deleteRentalButton}
+                  className="inline-flex items-center justify-center gap-1.5 px-2.5 py-2 sm:py-1 text-xs font-medium text-[#991B1B] bg-white hover:bg-[#FEF2F2] border border-[#FECACA] rounded-md transition-colors cursor-pointer disabled:opacity-50 min-h-[36px] sm:min-h-0 shadow-xs"
+                >
+                  <Trash2 className="w-3.5 h-3.5 stroke-[1.5]" />
+                  <span className="sm:hidden">{t.deleteRentalButton}</span>
                 </button>
               </div>
             </div>
@@ -467,6 +494,20 @@ export default function StudentSearchView() {
                     </span>
                   </div>
                 </div>
+              </div>
+
+              <div className="flex items-center justify-end shrink-0 w-full sm:w-auto">
+                <button
+                  type="button"
+                  onClick={() => handleDeleteRental(r.id)}
+                  disabled={deletingRentalId === r.id}
+                  title={t.deleteRentalButton}
+                  aria-label={t.deleteRentalButton}
+                  className="inline-flex items-center justify-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-[#991B1B] bg-white hover:bg-[#FEF2F2] border border-[#FECACA] rounded-md transition-colors cursor-pointer disabled:opacity-50 shadow-xs"
+                >
+                  <Trash2 className="w-3.5 h-3.5 stroke-[1.5]" />
+                  <span className="text-[11px] font-mono">{t.deleteRentalButton}</span>
+                </button>
               </div>
             </div>
           ))}
@@ -606,6 +647,7 @@ export default function StudentSearchView() {
           books={books}
           studentName={selectedStudent.fullName}
           studentGrade={selectedStudent.grade}
+          studentActiveRentals={activeRentals}
         />
       )}
 

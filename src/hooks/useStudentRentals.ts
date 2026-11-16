@@ -168,6 +168,13 @@ export function useStudentRentals(searchQuery: string) {
         throw new Error(check.reason || `Grade ${selectedStudent.grade} students cannot borrow Grade ${check.bookGrade} textbooks.`);
       }
 
+      const alreadyActive = rentals.some(
+        (r) => r.bookId === bookId && (r.status === 'active' || !r.returnedAt)
+      );
+      if (alreadyActive) {
+        throw new Error('This student already holds an active copy of this textbook.');
+      }
+
       let rentTimestamp: Timestamp;
       if (issueDate) {
         if (issueDate instanceof Date) {
@@ -219,7 +226,7 @@ export function useStudentRentals(searchQuery: string) {
         console.warn('Could not update counts on assign:', e);
       }
     },
-    [selectedStudent, allBooks]
+    [selectedStudent, allBooks, rentals]
   );
 
   const activeRentals = useMemo(
@@ -277,6 +284,73 @@ export function useStudentRentals(searchQuery: string) {
     [selectedStudent]
   );
 
+  // Delete a rental record (e.g. created by mistake)
+  const deleteRental = useCallback(
+    async (rentalId: string) => {
+      const targetRental = rentals.find((r) => r.id === rentalId);
+      const isActive = targetRental ? targetRental.status === 'active' || !targetRental.returnedAt : false;
+      const bookId = targetRental?.bookId;
+
+      if (!isFirebaseConfigured || !db) {
+        setRentals((prev) => prev.filter((r) => r.id !== rentalId));
+        if (isActive) {
+          if (selectedStudent) {
+            setSelectedStudent((prev) =>
+              prev
+                ? { ...prev, activeRentalsCount: Math.max(0, (prev.activeRentalsCount || 1) - 1) }
+                : null
+            );
+            setStudents((prev) =>
+              prev.map((s) =>
+                s.id === selectedStudent.id
+                  ? { ...s, activeRentalsCount: Math.max(0, (s.activeRentalsCount || 1) - 1) }
+                  : s
+              )
+            );
+          }
+          if (bookId) {
+            setAllBooks((prev) =>
+              prev.map((b) =>
+                b.id === bookId
+                  ? { ...b, availableCopies: Math.min(b.totalCopies, (b.availableCopies ?? 0) + 1) }
+                  : b
+              )
+            );
+          }
+        }
+        return;
+      }
+
+      await deleteDoc(doc(db, 'rentals', rentalId));
+      setRentals((prev) => prev.filter((r) => r.id !== rentalId));
+
+      if (isActive) {
+        if (selectedStudent) {
+          try {
+            await updateDoc(doc(db, 'students', selectedStudent.id), {
+              activeRentalsCount: Math.max(0, (selectedStudent.activeRentalsCount || 1) - 1),
+            });
+          } catch (e) {
+            console.warn('Could not decrement student count on delete rental:', e);
+          }
+        }
+        if (bookId) {
+          const book = allBooks.find((b) => b.id === bookId);
+          if (book && typeof book.availableCopies === 'number') {
+            try {
+              await updateDoc(doc(db, 'books', bookId), {
+                availableCopies: Math.min(book.totalCopies, book.availableCopies + 1),
+              });
+            } catch (e) {
+              console.warn('Could not increment book available copies on delete rental:', e);
+            }
+          }
+        }
+      }
+    },
+    [rentals, selectedStudent, allBooks]
+  );
+
   return {
     students,
     filteredStudents,
@@ -289,6 +363,7 @@ export function useStudentRentals(searchQuery: string) {
     loading,
     returnBook,
     assignBook,
+    deleteRental,
     updateStudent,
     deleteStudent,
     books: allBooks,

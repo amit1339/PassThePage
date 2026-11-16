@@ -154,6 +154,15 @@ export function useBookRentals(searchQuery: string) {
         throw new Error(check.reason || `Grade ${student.grade} students cannot borrow Grade ${check.bookGrade} textbooks.`);
       }
 
+      const alreadyActive = rentals.some(
+        (r) =>
+          (r.studentDocId === student.id || r.studentSchoolId === student.studentId) &&
+          (r.status === 'active' || !r.returnedAt)
+      );
+      if (alreadyActive) {
+        throw new Error('This student already holds an active copy of this textbook.');
+      }
+
       let rentTimestamp: Timestamp;
       if (issueDate) {
         if (issueDate instanceof Date) {
@@ -217,7 +226,7 @@ export function useBookRentals(searchQuery: string) {
         console.warn('Could not update counts on assignStudent:', e);
       }
     },
-    [selectedBook]
+    [selectedBook, rentals]
   );
 
   // Mark a rental as returned
@@ -276,6 +285,62 @@ export function useBookRentals(searchQuery: string) {
     [rentals, selectedBook, students]
   );
 
+  // Delete a rental record (e.g. created by mistake)
+  const deleteRental = useCallback(
+    async (rentalId: string) => {
+      const targetRental = rentals.find((r) => r.id === rentalId);
+      const isActive = targetRental ? targetRental.status === 'active' || !targetRental.returnedAt : false;
+
+      if (!isFirebaseConfigured || !db) {
+        setRentals((prev) => prev.filter((r) => r.id !== rentalId));
+        if (isActive && selectedBook) {
+          setSelectedBook((prev) =>
+            prev
+              ? { ...prev, availableCopies: Math.min(prev.totalCopies, (prev.availableCopies ?? 0) + 1) }
+              : null
+          );
+          setBooks((prev) =>
+            prev.map((b) =>
+              b.id === selectedBook.id
+                ? { ...b, availableCopies: Math.min(b.totalCopies, (b.availableCopies ?? 0) + 1) }
+                : b
+            )
+          );
+        }
+        return;
+      }
+
+      await deleteDoc(doc(db, 'rentals', rentalId));
+      setRentals((prev) => prev.filter((r) => r.id !== rentalId));
+
+      if (isActive) {
+        if (selectedBook && typeof selectedBook.availableCopies === 'number') {
+          try {
+            await updateDoc(doc(db, 'books', selectedBook.id), {
+              availableCopies: Math.min(selectedBook.totalCopies, selectedBook.availableCopies + 1),
+            });
+          } catch (e) {
+            console.warn('Could not increment book available copies on delete rental:', e);
+          }
+        }
+
+        if (targetRental?.studentDocId) {
+          try {
+            const studentDoc = students.find((s) => s.id === targetRental.studentDocId);
+            if (studentDoc) {
+              await updateDoc(doc(db, 'students', targetRental.studentDocId), {
+                activeRentalsCount: Math.max(0, (studentDoc.activeRentalsCount || 1) - 1),
+              });
+            }
+          } catch (e) {
+            console.warn('Could not decrement student count on delete rental:', e);
+          }
+        }
+      }
+    },
+    [rentals, selectedBook, students]
+  );
+
   // Delete a book from catalog
   const deleteBook = useCallback(
     async (bookId: string) => {
@@ -301,6 +366,7 @@ export function useBookRentals(searchQuery: string) {
     loading,
     markReturned,
     assignStudent,
+    deleteRental,
     deleteBook,
   };
 }

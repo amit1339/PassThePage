@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { X, BookOpen, Plus, Barcode, Check, ShieldAlert, Filter, Calendar } from 'lucide-react';
-import type { Book } from '../../types/database';
+import type { Book, Rental } from '../../types/database';
 import { isGradeEligible, formatGradeText, formatGradeLetter } from '../../lib/gradeUtils';
 import { useLanguage } from '../../context/LanguageContext';
 
@@ -11,6 +11,7 @@ interface AssignBookModalProps {
   books: Book[];
   studentName: string;
   studentGrade?: number;
+  studentActiveRentals?: Rental[];
 }
 
 function getTodayString() {
@@ -28,6 +29,7 @@ export default function AssignBookModal({
   books,
   studentName,
   studentGrade,
+  studentActiveRentals = [],
 }: AssignBookModalProps) {
   const [selectedBookId, setSelectedBookId] = useState('');
   const [copyBarcode, setCopyBarcode] = useState('');
@@ -38,16 +40,29 @@ export default function AssignBookModal({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { t, lang } = useLanguage();
 
-  // Compute eligibility for each book
+  // Set of book IDs that this student currently holds in active loan
+  const activeBookIds = useMemo(() => {
+    const ids = new Set<string>();
+    studentActiveRentals.forEach((r) => {
+      if (r.status === 'active' || !r.returnedAt) {
+        if (r.bookId) ids.add(r.bookId);
+      }
+    });
+    return ids;
+  }, [studentActiveRentals]);
+
+  // Compute eligibility and duplicate loan status for each book
   const booksWithEligibility = useMemo(() => {
     return books.map((b) => {
       const eligibility = isGradeEligible(studentGrade, b.gradeLevel);
+      const alreadyRented = activeBookIds.has(b.id);
       return {
         book: b,
+        alreadyRented,
         ...eligibility,
       };
     });
-  }, [books, studentGrade]);
+  }, [books, studentGrade, activeBookIds]);
 
   const filteredBooks = useMemo(() => {
     return booksWithEligibility.filter(({ book, eligible }) => {
@@ -70,7 +85,12 @@ export default function AssignBookModal({
 
   if (!isOpen) return null;
 
-  const handleSelectBook = (book: Book, eligible: boolean, reason?: string) => {
+  const handleSelectBook = (book: Book, eligible: boolean, alreadyRented: boolean, reason?: string) => {
+    if (alreadyRented) {
+      setError(t.alreadyRentedError);
+      return;
+    }
+
     if (!eligible) {
       setError(
         reason ||
@@ -94,6 +114,11 @@ export default function AssignBookModal({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedBookId || !copyBarcode.trim()) return;
+
+    if (selectedItem && selectedItem.alreadyRented) {
+      setError(t.alreadyRentedError);
+      return;
+    }
 
     if (selectedItem && !selectedItem.eligible) {
       setError(
@@ -197,23 +222,25 @@ export default function AssignBookModal({
             />
 
             <div className="max-h-48 overflow-y-auto border border-[#E7E5E4] rounded-md divide-y divide-[#E7E5E4] bg-white">
-              {filteredBooks.map(({ book, eligible, reason, bookGrade }) => {
+              {filteredBooks.map(({ book, eligible, reason, bookGrade, alreadyRented }) => {
                 const isSelected = selectedBookId === book.id;
                 return (
                   <button
                     key={book.id}
                     type="button"
-                    onClick={() => handleSelectBook(book, eligible, reason)}
+                    onClick={() => handleSelectBook(book, eligible, alreadyRented, reason)}
                     className={`w-full flex items-center justify-between p-3 text-start transition-colors cursor-pointer ${
                       isSelected
                         ? 'bg-[#F3EFEA] border-s-2 border-[#1C1917]'
+                        : alreadyRented
+                        ? 'bg-[#FEF2F2]/50 hover:bg-[#FEF2F2]/80 cursor-not-allowed'
                         : eligible
                         ? 'hover:bg-[#FAF8F5]'
                         : 'opacity-50 bg-[#FAF8F5] cursor-not-allowed'
                     }`}
                   >
                     <div className="min-w-0 pe-3">
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 flex-wrap">
                         <p className="text-xs font-semibold text-[#1C1917] truncate tracking-[-0.01em]">
                           {book.title}
                         </p>
@@ -225,6 +252,11 @@ export default function AssignBookModal({
                         {eligible && bookGrade && (
                           <span className="text-[10px] font-mono px-1.5 py-0.2 rounded-md bg-[#ECFDF5] text-[#065F46] border border-[#A7F3D0] shrink-0">
                             {t.gradeMatchTag(bookGrade)}
+                          </span>
+                        )}
+                        {alreadyRented && (
+                          <span className="text-[10px] font-mono px-1.5 py-0.2 rounded-md bg-[#FEF2F2] text-[#991B1B] border border-[#FECACA] font-medium shrink-0">
+                            {t.alreadyRentedTag}
                           </span>
                         )}
                       </div>
@@ -317,7 +349,12 @@ export default function AssignBookModal({
             </button>
             <button
               type="submit"
-              disabled={!selectedBookId || !copyBarcode.trim() || isSubmitting || (selectedItem && !selectedItem.eligible)}
+              disabled={
+                !selectedBookId ||
+                !copyBarcode.trim() ||
+                isSubmitting ||
+                (selectedItem && (!selectedItem.eligible || selectedItem.alreadyRented))
+              }
               className="flex items-center justify-center gap-1.5 px-4 py-2 sm:py-1.5 text-xs font-medium text-[#FAF8F5] bg-[#1C1917] hover:bg-[#292524] rounded-md transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed shadow-card min-h-[38px] sm:min-h-0"
             >
               <Plus className="w-3.5 h-3.5 stroke-[1.5]" />

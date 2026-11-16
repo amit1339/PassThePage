@@ -83,6 +83,10 @@ export interface Translations {
   statusActive: string;
   statusReturned: string;
   statusOverdue: string;
+  alreadyRentedTag: string;
+  alreadyRentedError: string;
+  deleteRentalButton: string;
+  confirmDeleteRental: string;
 
   // Modals - Add Book
   addBookTitle: string;
@@ -251,6 +255,11 @@ export const translations: Record<Language, Translations> = {
     statusActive: 'Active Loan',
     statusReturned: 'Returned to Inventory',
     statusOverdue: 'Overdue Term',
+    alreadyRentedTag: 'Already Rented',
+    alreadyRentedError: 'This student already holds an active copy of this textbook.',
+    deleteRentalButton: 'Delete Borrowing',
+    confirmDeleteRental:
+      'Are you sure you want to delete this borrowing record? (Textbook copy will be returned to storage)',
 
     addBookTitle: 'Add New Textbook',
     addBookSub: 'Register a new catalog title to the collection',
@@ -415,6 +424,11 @@ export const translations: Record<Language, Translations> = {
     statusActive: 'בהשאלה פעילה',
     statusReturned: 'הוחזר למלאי',
     statusOverdue: 'באיחור החזרה',
+    alreadyRentedTag: 'כבר מושאל',
+    alreadyRentedError: 'תלמיד זה כבר מחזיק בעותק פעיל של ספר זה. לא ניתן להשאיל יותר מעותק אחד.',
+    deleteRentalButton: 'מחיקת השאלה',
+    confirmDeleteRental:
+      'האם אתה בטוח שברצונך למחוק את רשומת ההשאלה הזו? (עותק הספר יוחזר למלאי בית הספר)',
 
     addBookTitle: 'הוספת ספר לימוד חדש',
     addBookSub: 'רישום כותר חדש לקטלוג הספרים של בית הספר',

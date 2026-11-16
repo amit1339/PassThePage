@@ -99,7 +99,12 @@ export default function AssignStudentModal({
 
   if (!isOpen || !book) return null;
 
-  const handleSelectStudent = (student: Student, eligible: boolean, reason?: string) => {
+  const handleSelectStudent = (student: Student, eligible: boolean, alreadyHasCopy: boolean, reason?: string) => {
+    if (alreadyHasCopy) {
+      setError(t.alreadyBorrowedWarning);
+      return;
+    }
+
     if (!eligible) {
       setError(
         reason ||
@@ -118,6 +123,11 @@ export default function AssignStudentModal({
     e.preventDefault();
     if (!selectedStudentId || !copyBarcode.trim()) {
       setError(lang === 'he' ? 'נא לבחור תלמיד ולהזין ברקוד עותק.' : 'Please select a student and provide a copy barcode.');
+      return;
+    }
+
+    if (selectedItem && selectedItem.alreadyHasCopy) {
+      setError(t.alreadyBorrowedWarning);
       return;
     }
 
@@ -264,10 +274,12 @@ export default function AssignStudentModal({
                     <button
                       key={student.id}
                       type="button"
-                      onClick={() => handleSelectStudent(student, eligible, reason)}
+                      onClick={() => handleSelectStudent(student, eligible, alreadyHasCopy, reason)}
                       className={`w-full flex items-center justify-between p-3 text-start transition-colors cursor-pointer ${
                         isSelected
                           ? 'bg-[#F3EFEA]'
+                          : alreadyHasCopy
+                          ? 'bg-[#FEF2F2]/40 hover:bg-[#FEF2F2]/70 cursor-not-allowed'
                           : eligible
                           ? 'hover:bg-[#FAF8F5]'
                           : 'opacity-50 hover:bg-[#FEF2F2] cursor-not-allowed'
@@ -294,11 +306,16 @@ export default function AssignStudentModal({
                             <span className="text-[10px] font-mono text-[#78716C]">
                               ({student.className})
                             </span>
+                            {alreadyHasCopy && (
+                              <span className="text-[10px] font-mono px-1.5 py-0.2 rounded-md bg-[#FEF2F2] text-[#991B1B] border border-[#FECACA] font-medium shrink-0">
+                                {t.alreadyRentedTag}
+                              </span>
+                            )}
                           </div>
                           <div className="flex items-center gap-2 text-[11px] text-[#78716C] font-mono mt-0.5">
                             <span>{t.studentIdLabel} {student.studentId}</span>
                             {alreadyHasCopy && (
-                              <span className="text-[#B45309] bg-[#FEF3C7] px-1 rounded text-[10px] font-sans">
+                              <span className="text-[#991B1B] bg-[#FEF2F2] px-1 rounded text-[10px] font-sans border border-[#FECACA]">
                                 {t.alreadyBorrowedWarning}
                               </span>
                             )}
@@ -406,8 +423,12 @@ export default function AssignStudentModal({
             </button>
             <button
               type="submit"
-              disabled={!selectedStudentId || isSubmitting}
-              className="flex items-center justify-center gap-1.5 px-4 py-2 sm:py-1.5 text-xs font-medium text-[#FAF8F5] bg-[#1C1917] hover:bg-[#292524] rounded-md transition-colors cursor-pointer disabled:opacity-50 shadow-card min-h-[38px] sm:min-h-0"
+              disabled={
+                !selectedStudentId ||
+                isSubmitting ||
+                (selectedItem && (selectedItem.alreadyHasCopy || !selectedItem.eligible))
+              }
+              className="flex items-center justify-center gap-1.5 px-4 py-2 sm:py-1.5 text-xs font-medium text-[#FAF8F5] bg-[#1C1917] hover:bg-[#292524] rounded-md transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed shadow-card min-h-[38px] sm:min-h-0"
             >
               <Check className="w-3.5 h-3.5 stroke-[2]" />
               <span>{isSubmitting ? t.issuingButton : t.completeIssuanceButton}</span>
